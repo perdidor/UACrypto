@@ -1,0 +1,98 @@
+/*
+ * gost89.h
+ *
+ * Created: 12.09.2021 07:30:53
+ *  Author: root
+ */ 
+
+
+#ifndef GOST89_H_
+#define GOST89_H_
+
+#include <math.h>
+#include <avr/io.h>
+#include <stdio.h>
+#include <string.h>
+#include <avr/interrupt.h>
+#include <avr/eeprom.h>
+#include <avr/pgmspace.h>
+#include <inttypes.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+typedef struct {
+	uint32_t k[8];
+
+	uint32_t k1[16];
+	uint32_t k2[16];
+	uint32_t k3[16];
+	uint32_t k4[16];
+	uint32_t k5[16];
+	uint32_t k6[16];
+	uint32_t k7[16];
+	uint32_t k8[16];
+
+	uint32_t k87[256];
+	uint32_t k65[256];
+	uint32_t k43[256];
+	uint32_t k21[256];
+
+	uint32_t n[2];
+
+	uint8_t gamma[8];
+} gost89_t;
+
+//=========GOST89 hash properties
+size_t gost89HashLength;
+uint8_t gost89Hash_U[32];
+uint8_t gost89Hash_V[32];
+uint8_t gost89Hash_W[32];
+uint8_t gost89Hash__S[32];
+uint8_t gost89Hash_C8Buf[8];
+uint8_t gost89Hash_S[32];
+uint8_t gost89Hash_Value[32];
+uint8_t gost89Hash_Buf[32];
+int32_t gost89Hash_AB2[4];
+uint8_t gost89Hash_Left[64];
+size_t gost89Hash_Leftlength;
+//=========GOST89 hash properties
+
+gost89_t gost89;
+
+uint8_t gost89_Key[32];
+
+void gost89_init(uint8_t * sbox);
+void gost89BoxInit(void);
+uint32_t gost89Pass(uint32_t x);
+void gost89Crypt64(uint8_t * clear, uint8_t * outres);
+void gost89Decrypt64(uint8_t * crypt, uint8_t * outres);
+uint8_t * gost89Crypt64_CFB(uint8_t * iv, uint8_t * plain);
+uint8_t * gost89Decrypt64_CFB(uint8_t * iv, uint8_t * crypted);
+uint8_t * gost89Crypt_CFB(uint8_t * iv, uint8_t * plain, size_t plainlen);
+uint8_t * gost89Decrypt_CFB(uint8_t * iv, uint8_t * crypted, size_t cryptedlen);
+uint8_t * gost89Crypt(uint8_t * iv, uint8_t * plain, size_t plainlen);
+uint8_t * gost89Decrypt(uint8_t * crypted, size_t cryptedlen);
+
+size_t gost89MacOut(uint8_t * buf, int nbits, uint8_t * outres);
+
+void Gost89ConvertPassword(uint8_t * pw, size_t pwlen);
+uint8_t * DecodeData(uint8_t * crypted, size_t cryptlen, uint8_t * pw, size_t pwlen);
+
+void Gost89HashSwapBytes(uint8_t * w, uint8_t * k);
+void Gost89HashCircle_XOR8(uint8_t * w, uint8_t * k);
+void Gost89HashTransform_3(uint8_t *  data);
+int32_t Gost89HashAddBlocks(size_t n, uint8_t * left, uint8_t * right);
+void Gost89HashXorBlocks(uint8_t * ret, uint8_t * a, size_t alen, uint8_t * b);
+void Gost89HashStep(uint8_t * H, uint8_t * M);
+void Gost89HashUpdate(uint8_t * block, size_t blocklen);
+void Gost89HashUpdate32(uint8_t * block32);
+void Gost89HashFinish(void);
+void Gost89HashReset(void);
+void Gost89Dumb_KDF(uint8_t * input, size_t inputlen, size_t n_passes);
+uint8_t * Gost89PB_KDF(uint8_t * input, size_t inputlen, uint8_t * salt, size_t saltlen, size_t iterations);
+
+void ZeroAll(void);
+
+
+
+#endif /* GOST89_H_ */
