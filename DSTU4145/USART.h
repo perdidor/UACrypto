@@ -13,6 +13,7 @@ void EXT_UART_Setup(void);
 void EXT_UART_Transmit(char * data);
 void EXT_CRLF(void);
 void PrintDebugByteArray(uint8_t * outarr, size_t arrlen);
+void EXT_UART_TransmitRawData(uint8_t * outarr, size_t arrlen);
 
 
 

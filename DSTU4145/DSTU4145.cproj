@@ -143,6 +143,18 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ADCops.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ADCops.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="bnops.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="bnops.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="ConvertHelper.c">
       <SubType>compile</SubType>
     </Compile>
@@ -185,6 +197,12 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="notaxTemplate.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="notaxTemplate.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Point.c">
       <SubType>compile</SubType>
     </Compile>
@@ -195,6 +213,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="PrivateKey.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="PRNG.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="PRNG.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="USART.c">

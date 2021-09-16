@@ -32,3 +32,15 @@ size_t ConvertHex2Bin(char * src, uint32_t * target) {
 	}
 	return reslen;
 }
+
+uint8_t * InvertByteArray(uint8_t * indata, size_t len) {
+	uint8_t * res = malloc(len + 1);
+	uint8_t cr = 0;
+	for (size_t i = 0; i < len; i++)
+	{
+		cr = indata[i];
+		cr = ((cr >> 7) | ((cr >> 5) &  2) | ((cr >> 3) &  4) | ((cr >> 1) & 8) | ((cr << 1) & 16) | ((cr << 3) & 32) | ((cr << 5) & 64) | ((cr << 7) & 128));
+		res[len - i] = cr;
+	}
+	return res;
+}

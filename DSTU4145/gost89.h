@@ -72,27 +72,23 @@ uint8_t * gost89Crypt_CFB(uint8_t * iv, uint8_t * plain, size_t plainlen);
 uint8_t * gost89Decrypt_CFB(uint8_t * iv, uint8_t * crypted, size_t cryptedlen);
 uint8_t * gost89Crypt(uint8_t * iv, uint8_t * plain, size_t plainlen);
 uint8_t * gost89Decrypt(uint8_t * crypted, size_t cryptedlen);
-
-size_t gost89MacOut(uint8_t * buf, int nbits, uint8_t * outres);
-
-void Gost89ConvertPassword(uint8_t * pw, size_t pwlen);
 uint8_t * DecodeData(uint8_t * crypted, size_t cryptlen, uint8_t * pw, size_t pwlen);
+size_t gost89MacOut(uint8_t * buf, int nbits, uint8_t * outres);
+void Gost89ConvertPassword(uint8_t * pw, size_t pwlen);
 
 void Gost89HashSwapBytes(uint8_t * w, uint8_t * k);
 void Gost89HashCircle_XOR8(uint8_t * w, uint8_t * k);
 void Gost89HashTransform_3(uint8_t *  data);
 int32_t Gost89HashAddBlocks(size_t n, uint8_t * left, uint8_t * right);
 void Gost89HashXorBlocks(uint8_t * ret, uint8_t * a, size_t alen, uint8_t * b);
-void Gost89HashStep(uint8_t * H, uint8_t * M);
+void Gost89HashStep(uint8_t * H, uint8_t * Curve_m);
 void Gost89HashUpdate(uint8_t * block, size_t blocklen);
 void Gost89HashUpdate32(uint8_t * block32);
 void Gost89HashFinish(void);
 void Gost89HashReset(void);
-void Gost89Dumb_KDF(uint8_t * input, size_t inputlen, size_t n_passes);
-uint8_t * Gost89PB_KDF(uint8_t * input, size_t inputlen, uint8_t * salt, size_t saltlen, size_t iterations);
-
-void ZeroAll(void);
-
-
+void Gost89HashCompute(uint8_t * data, size_t datalen);
+void Gost89HashDumb_KDF(uint8_t * input, size_t inputlen, size_t n_passes);
+uint8_t * Gost89HashPB_KDF(uint8_t * input, size_t inputlen, uint8_t * salt, size_t saltlen, size_t iterations);
+void Gost89HashZeroAll(void);
 
 #endif /* GOST89_H_ */

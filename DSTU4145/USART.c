@@ -29,7 +29,6 @@ void EXT_UART_Setup()
 void EXT_UART_Transmit(char * data)
 {
 	for (int i = 0; i < strlen(data); i++){
-		/* Wait for empty transmit buffer */
 		while (( UCSR0A & (1<<UDRE0))  == 0){};
 		if ((data[i] >= 30 && data[i] != 127) || (data[i] == 0x0d || data[i] == 0x0a)) UDR0 = data[i];
 	}
@@ -52,4 +51,11 @@ void PrintDebugByteArray(uint8_t * outarr, size_t arrlen)
 	sprintf(buff, " %02x", outarr[arrlen - 1]);
 	EXT_UART_Transmit(buff);
 	EXT_CRLF();
+}
+
+void EXT_UART_TransmitRawData(uint8_t * outarr, size_t arrlen) {
+	for (int i = 0; i < arrlen; i++){
+		while (( UCSR0A & (1<<UDRE0))  == 0){};
+		UDR0 = outarr[i];
+	}
 }

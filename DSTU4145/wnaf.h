@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-size_t windowNaf(uint32_t width, field_t * field, int * resarray, curve_t * curve);
+size_t windowNaf(uint32_t width, field_t * field, int * resarray);
 size_t getWindowSize(uint32_t bits);
 
 

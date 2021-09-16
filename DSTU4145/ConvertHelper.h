@@ -16,6 +16,7 @@
 
 uint8_t ConvertChar2Int(char input);
 size_t ConvertHex2Bin(char * src, uint32_t * target);
+uint8_t * InvertByteArray(uint8_t * indata, size_t len);
 
 
 #endif /* CONVERTHELPER_H_ */

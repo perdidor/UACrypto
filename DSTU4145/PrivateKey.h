@@ -14,31 +14,24 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef struct {
-	uint8_t type;
-	uint8_t ks_type;
-	uint8_t bp[33];
-	uint8_t param_b[33];
-	uint8_t p_ks_rawdata_b[33];
-	uint32_t * param_a;
-	uint32_t * order;
-	uint32_t * param_m;
-	uint32_t * trinominal_value;
-	uint32_t * pentanominal_k1;
-	uint32_t * pentanominal_k2;
-	uint32_t * pentanominal_k3;
-	uint32_t trinominal_value_len;
-	uint32_t pentanominal_k1_len;
-	uint32_t pentanominal_k2_len;
-	uint32_t pentanominal_k3_len;
-	uint32_t param_m_len;
-	uint32_t order_len;
-	uint32_t param_a_len;
-	uint32_t bp_len;
-	uint32_t param_b_len;
-	uint32_t p_ks_rawdata_len;
-} dstuprivkey_t;
+uint32_t Priv_param_d[8];
+uint32_t Priv_mod_bits[3];
+size_t Priv_mod_words;
+uint8_t Priv_sbox[64];
 
-uint8_t DSTUPrivKeyRawData[127];
+uint32_t Curve_mod_tmp[22];
+size_t Curve_m;
+size_t Curve_length;
+uint32_t Curve_inv_tmp1[9];
+uint32_t Curve_inv_tmp2[9];
+uint32_t Curve_field_a[10];
+uint32_t Curve_field_b[18];
+uint32_t Curve_field_kofactor[1];
+uint32_t Curve_field_modulus[9];
+uint32_t Curve_field_one[9];
+uint32_t Curve_field_order[17];
+uint32_t Curve_field_zero[1];
+uint32_t Curve_basepoint_field_x[18];
+uint32_t Curve_basepoint_field_y[9];
 
 #endif /* PRIVATEKEY_H_ */

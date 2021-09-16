@@ -21,8 +21,8 @@
 
 uint32_t DEFAULT_CUTOFFS[] = { 13, 41, 121, 337, 897, 2305 };
 
-size_t windowNaf(uint32_t width, field_t * field, int * resarray, curve_t * curve) {
-	field_t * f = FieldClone(field, curve);
+size_t windowNaf(uint32_t width, field_t * field, int * resarray) {
+	field_t * f = FieldClone(field);
 	size_t f_len = FieldBitLength(f);
 	size_t ret_len = floor(f_len / width + 1);
 	resarray = malloc(ret_len * sizeof(int));

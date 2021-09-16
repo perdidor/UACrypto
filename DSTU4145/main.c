@@ -18,9 +18,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-//#include "PrivateKey.h"
+#include "PrivateKey.h"
 #include "USART.h"
 #include "gost89.h"
+#include "notaxTemplate.h"
+#include "ADCops.h"
+#include "PRNG.h"
+#include "ConvertHelper.h"
 
 void delay_1ms(uint16_t ms) {
 	volatile uint16_t i,foo = 0;
@@ -33,6 +37,8 @@ void delay_1ms(uint16_t ms) {
 	foo = 0;
 }
 
+uint8_t ss[54] = { 54, 178, 216, 188, 139, 233, 3, 35, 23, 46, 155, 177, 212, 33, 246, 115, 116, 11, 138, 48, 220, 233, 146, 116, 174, 80, 185, 198, 172, 219, 241, 92, 188, 177, 139, 37, 24, 5, 94, 113, 80, 31, 2, 22, 121, 177, 179, 163, 52, 206, 238, 34, 83, 176 };
+
 int main(void)
 {
 	DDRD |= 0x40;
@@ -41,38 +47,27 @@ int main(void)
 	//delay_1ms(1000);
 	//PORTD ^= 0x40;
 	EXT_UART_Setup();
-	//EXT_UART_Transmit("hello!\r\n");
-	//uint8_t s[2] = { gost89hash.H[0], gost89hash.H[01] };
-	//PrintDebugByteArray(s, 2);
+	//ADC_Init();
+	//PRNG_Init();
+	uint8_t * as = InvertByteArray(ss, 54);
+	PrintDebugByteArray(as, 55);
+	//ADC_Enable();
+	//uint16_t qwe = ADC_GetEntropy();
+	//char * buff2 = malloc(64);
+	//sprintf(buff2, "ADC %d", qwe);
+	//EXT_UART_Transmit(buff2);
 	//EXT_CRLF();
-	//uint8_t * sss = DecodeData((uint8_t *)"tect4", 5);
-	//uint8_t s[2] = { sss[0], sss[01] };
-	//PrintDebugByteArray(sss, 32);
-	EXT_UART_Transmit("done!\r\n");
-	//bc_init_numbers();
-	//dstuprivkey_t * priv = malloc(sizeof(dstuprivkey_t));
-	//memcpy(priv, DSTUPrivKeyRawData, 917);
-	//uint8_t c = 0;
-	//doubletype * param_m_len = malloc(sizeof(doubletype));
-	//memcpy(param_m_len->bytes, &DSTUPrivKeyRawData[0], 4);
-	//param_m_len->value = 0;
-	//
-	//priv->param_m.length_W = param_m_len->value;
-	//memcpy(priv->param_m.wordv, &DSTUPrivKeyRawData[4], priv->param_m.length_W);
-	//EXT_UART_Setup();
-	//EXT_UART_Transmit("dfsdfsdfsdfsdf");
-	//EXT_UART_Setup();
+	//free(buff2);
 	int cnt = 0;
     /* Replace with your application code */
     while (1) 
     {
 		PORTD ^= 0x40;
-		char * buff = malloc(64);
-		sprintf(buff, "Hello #%d", cnt++);
-		EXT_UART_Transmit(buff);
-		EXT_CRLF();
-		free(buff);
-		//EXT_UART_Transmit("asdasd\r\n");
+		//char * buff = malloc(64);
+		//sprintf(buff, "Hello #%d", cnt++);
+		//EXT_UART_Transmit(buff);
+		//EXT_CRLF();
+		//free(buff);
 		delay_1ms(1000);
     }
 }
