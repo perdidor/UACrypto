@@ -17,16 +17,16 @@
 #include <stdint.h>
 #include <math.h>
 
-uint32_t g2fmblength(uint32_t * bytes, size_t len) {
+uint32_t g2fmblength(uint32_t * bytes, int len) {
 	uint32_t r = 1;
 
 	uint32_t t = 0;
 
 	uint32_t x = 0;
 
-	size_t nz = len - 1;
+	int nz = len - 1;
 
-	while (bytes[nz] == 0) {
+	while (bytes[nz] == 0 && nz >= 0) {
 		nz--;
 	}
 
@@ -59,13 +59,13 @@ uint32_t g2fmblength(uint32_t * bytes, size_t len) {
 	return r + nz * 32;
 }
 
-uint32_t * g2fmshiftRight(uint32_t * bytes, size_t len, uint32_t right, bool inplace) {
+void g2fmshiftRight(uint32_t * bytes, size_t len, uint32_t right) {
 	uint32_t wright = floor(right / 32);
 	right %= 32;
 
 	uint32_t idx;
 
-	size_t b_len = (len/sizeof(uint32_t));
+	size_t b_len = len;
 
 	uint32_t left = 32 - right;
 
@@ -75,11 +75,9 @@ uint32_t * g2fmshiftRight(uint32_t * bytes, size_t len, uint32_t right, bool inp
 
 	if (right == 31) mask_f = 0xffffffff;
 
-	uint32_t *_rbytes = malloc(len);
+	uint32_t *_rbytes = malloc(len * sizeof(uint32_t));
 
-	if (inplace) {
-		memcpy(_rbytes, &bytes, len);
-	}
+	memcpy(_rbytes, bytes, len * sizeof(uint32_t));
 
 	_rbytes[0] = bytes[0] >> right;
 	for (idx = 1; idx < b_len; idx++) {
@@ -89,13 +87,19 @@ uint32_t * g2fmshiftRight(uint32_t * bytes, size_t len, uint32_t right, bool inp
 		_rbytes[idx - 1] |= (tmp << left);
 	}
 
-	if (wright == 0) return _rbytes;
+	if (wright == 0) {
+		memcpy(bytes, _rbytes, len * sizeof(uint32_t));
+		free(_rbytes);
+		return;
+	}
 
 	for (idx = 0; idx < b_len; idx++) {
 		_rbytes[idx] = _rbytes[idx + wright] || 0;
 	}
 
-	return _rbytes;
+	memcpy(bytes, _rbytes, len * sizeof(uint32_t));
+	free(_rbytes);
+	return;
 }
 
 void g2fmmul_1x1(uint32_t * ret, uint16_t offset, uint32_t a, uint32_t b) {
@@ -175,23 +179,23 @@ void g2fmfmul(uint32_t * a, size_t alen, uint32_t * b, size_t blen, uint32_t * s
 	uint32_t y0;
 	uint32_t x1;
 	uint32_t x0;
-	size_t a_len = alen/sizeof(uint32_t);
-	size_t b_len = blen/sizeof(uint32_t);
-	size_t s_len = slen/sizeof(uint32_t);
+	//size_t a_len = alen/sizeof(uint32_t);
+	//size_t b_len = blen/sizeof(uint32_t);
+	//size_t s_len = slen/sizeof(uint32_t);
 
-	for (int i = 0; i < s_len; i++) {
+	for (int i = 0; i < slen; i++) {
 		s[i] = 0;
 	}
 
 	uint32_t x22[6];
 
-	for (int j = 0; j < b_len; j += 2) {
+	for (int j = 0; j < blen; j += 2) {
 		y0 = b[j];
-		y1 = j + 1 == b_len ? 0 : b[j + 1];
+		y1 = j + 1 == blen ? 0 : b[j + 1];
 
-		for (int i = 0; i < a_len; i += 2) {
+		for (int i = 0; i < alen; i += 2) {
 			x0 = a[i];
-			x1 = i + 1 == a_len ? 0 : a[i + 1];
+			x1 = i + 1 == alen ? 0 : a[i + 1];
 
 			g2fmmul_2x2(x1, x0, y1, y0, x22);
 			s[j + i + 0] ^= x22[0];
@@ -209,11 +213,11 @@ void g2fmffmod(uint32_t * a, size_t alen, uint32_t * p, size_t p_len, uint32_t *
 	uint32_t d0;
 	uint32_t d1;
 	uint32_t tmp_ulong;
-	uint32_t j;
-	size_t a_len = alen/sizeof(uint32_t);
+	int j;
+	//size_t a_len = alen/sizeof(uint32_t);
 
-	size_t ret_len = a_len;
-	for (k = 0; k < a_len; k++) ret[k] = a[k];
+	size_t ret_len = alen;
+	for (k = 0; k < alen; k++) ret[k] = a[k];
 
 	/* start reduction */
 	uint32_t dN = floor(p[0] / 32);
@@ -268,15 +272,19 @@ void g2fmffmod(uint32_t * a, size_t alen, uint32_t * p, size_t p_len, uint32_t *
 }
 
 void g2fmfinv(uint32_t * a, size_t alen, uint32_t * p, size_t plen, uint32_t * ret) {
-	uint32_t b[alen];
-	uint32_t c[alen];
-	uint32_t v[alen];
-	uint32_t u[alen];
-	size_t p_len = plen/sizeof(uint32_t);
+	uint32_t b[10];
+	uint32_t c[10];
+	uint32_t v[10];
+	uint32_t u[10];
+	//size_t p_len = plen/sizeof(uint32_t);
 
 	b[0] = 1;
-	memcpy(&u, a, alen * 4);
-	for (int idx = 0; idx < p_len; idx++) {
+	//memcpy(u, a, alen * sizeof(uint32_t));
+	//memcpy(v, p, plen * sizeof(uint32_t));
+	for (int idx = 0; idx < alen; idx++) {
+		u[idx] = a[idx];
+	}
+	for (int idx = 0; idx < plen; idx++) {
 		v[idx] = p[idx];
 	}
 
@@ -284,7 +292,8 @@ void g2fmfinv(uint32_t * a, size_t alen, uint32_t * p, size_t plen, uint32_t * r
 	uint32_t vbits = g2fmblength(v, alen);
 
 	while (1) {
-		while (ubits >= 0 && !(u[0] & 1)) {
+		//uint32_t sad = u[0];
+		while (ubits >= 0 && !((u[0] & 1) == 1)) {
 			uint32_t u0 = u[0];
 			uint32_t b0 = b[0];
 			uint32_t u1;
@@ -294,7 +303,7 @@ void g2fmfinv(uint32_t * a, size_t alen, uint32_t * p, size_t plen, uint32_t * r
 			b0 ^= p[0] & mask;
 
 			uint32_t idx = 0;
-			for (uint32_t idx = 0; idx < p_len - 1; idx++) {
+			for (; idx < plen - 1; idx++) {
 				u1 = u[idx + 1];
 				u[idx] = (u0 >> 1) | (u1 << 31);
 				u0 = u1;
@@ -315,15 +324,18 @@ void g2fmfinv(uint32_t * a, size_t alen, uint32_t * p, size_t plen, uint32_t * r
 			ubits = vbits;
 			vbits = tmp;
 			uint32_t tmparr[alen];
-			memcpy(&tmparr, &u, alen * 4);
-			memcpy(&u, &v, alen * 4);
-			memcpy(&v, &tmparr, alen * 4);
-			memcpy(&tmparr, &b, alen * 4);
-			memcpy(&b, &c, alen * 4);
-			memcpy(&c, &tmparr, alen * 4);
+			memcpy(tmparr, u, alen * 4);
+			memcpy(u, v, alen * 4);
+			memcpy(v, tmparr, alen * 4);
+			memcpy(tmparr, b, alen * 4);
+			memcpy(b, c, alen * 4);
+			memcpy(c, tmparr, alen * 4);
+			//free(tmparr);
 		}
 
-		for (int idx = 0; idx < p_len; idx++) {
+		//memcpy(u, v, plen * 4);
+		//memcpy(b, c, plen * 4);
+		for (int idx = 0; idx < plen; idx++) {
 			u[idx] ^= v[idx];
 			b[idx] ^= c[idx];
 		}
@@ -333,7 +345,12 @@ void g2fmfinv(uint32_t * a, size_t alen, uint32_t * p, size_t plen, uint32_t * r
 		}
 	}
 
-	for (int idx = 0; idx < alen; idx++) {
-		ret[idx] = b[idx];
-	}
+	//for (int idx = 0; idx < alen; idx++) {
+		//ret[idx] = b[idx];
+	//}
+	memcpy(ret, b, alen * 4);
+	//free(b);
+	//free(c);
+	//free(u);
+	//free(v);
 }

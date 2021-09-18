@@ -22,83 +22,90 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-//uint32_t * CurveCalc_Modulus() {
+void CurveCalc_Modulus(uint32_t * res) {
 	//uint32_t * ret = malloc(Priv_mod_words * 4);
-	//ret[0] = 1;
-//
-	//uint32_t word = floor(Curve_m / 32);
-	//uint32_t bit = Curve_m % 32;
-	//ret[word] |= 1 << bit;
-//
-	//for (uint8_t i = 0; i < ks_len; i += 1) {
-		//word = floor(ks[i] / 32);
-		//bit = ks[i] % 32;
-		//ret[word] |= 1 << bit;
-	//}
-//
-	//return ret;
-//}
+	memset(res, 0x00, 36);
+	res[0] = 1;
 
-//void CurveExpandXtoY(field_t * x, field_t * expanded_x, field_t * expanded_y) {
-	//if (FieldIs_Zero(x)) {
-		//expanded_y = FieldMod_Mul(b->b);
-	//}
-	//memcpy(expanded_x, x, sizeof(field_t));
-	//bool k = FieldTestBit(0, expanded_x);
-	//expanded_x = FieldClearBit(expanded_x, 0);
-	//uint8_t trace = FieldTrace(expanded_x);
-	//if ((trace != 0 && FieldIs_Zero(a)) || (trace == 0 && FieldEquals(a->one))) {
-		//expanded_x = FieldSetBit(expanded_x, 0);
-	//}
-	//field_t * x2 = FieldMod_Mul(expanded_x, expanded_x);
-	//expanded_y = FieldMod_Mul(x2, expanded_x);
-	//if (FieldEquals(a->one)) {
-		//FieldAddM(expanded_y, x2, 0, 0);
-	//}
-	//FieldAddM(expanded_y->a, 0, 0);
-	//field_t * invx2 = FieldInvert(x2);
-	//expanded_y = FieldMod_Mul(expanded_y, invx2);
-	//expanded_y = Curvefsquad(expanded_y);
-	//uint8_t trace_y = FieldTrace(expanded_y);
-//
-	//if ((k && trace_y == 0) || (!k && trace_y != 0)) {
-		//expanded_y->bytes[0] ^= 1;
-	//}
-	//expanded_y = FieldMod_Mul(expanded_y, x);
-//}
+	uint32_t word = floor(Curve_m / 32);
+	uint32_t bit = Curve_m % 32;
+	res[word] |= 1 << bit;
 
-//field_t * Curvefsquad(field_t * field) {
-	//
-	//field_t * ret = Curvefsquad_odd(field);
-//
-	//g2fmffmod(ret->bytes, 3, ret->bytes);
-	//return ret;
-//}
+	for (uint8_t i = 0; i < 1; i += 1) {
+		word = floor(12 / 32);
+		bit = 12 % 32;
+		res[word] |= 1 << bit;
+	}
+}
 
-//field_t * Curvefsquad_odd(field_t * field) {
-	//uint32_t bitl_m = Curve_m;
-	//uint32_t range_to = (bitl_m - 1) / 2;
-	//field_t * val_a = malloc(sizeof(field_t));
-	//g2fmffmod(field->bytes, 3, val_a->bytes);
-//
-	//field_t * val_z = malloc(sizeof(field_t));
-	//memcpy(val_z, val_a, sizeof(field_t));
-//
-	//for (size_t idx = 1; idx <= range_to; idx += 1) {
-		//val_z = FieldMod_Sqr(val_z);
-		//val_z = FieldMod_Sqr(val_z);
-		//g2fmffmod(val_a->bytes, 3, val_z->bytes);
-	//}
-//
-	//field_t * val_w = FieldMod_Mul(val_z, val_z);
-	//FieldAddM(val_w, val_z, 0, 0);
-//
-	//if (FieldEquals(val_w, val_a)) {
-		//return val_z;
-	//}
-//
-	//return 0;
-//}
+void CurveExpandXtoY(field_t * x, field_t * expanded_x, field_t * expanded_y) {
+	field_t * fieldb = malloc(sizeof(field_t));
+	field_t * fielda = malloc(sizeof(field_t));
+	field_t * fieldone = malloc(sizeof(field_t));
+	FieldFromUint32Buf(Curve_field_b, 18, fieldb);
+	FieldFromUint32Buf(Curve_field_a, 10, fielda);
+	FieldFromUint32Buf(Curve_field_one, 9, fieldone);
+	if (FieldIs_Zero(x)) {
+		FieldMod_Mul(fieldb, fieldb, expanded_y);
+	}
+	memcpy(expanded_x, x, sizeof(field_t));
+	bool k = FieldTestBit(0, expanded_x);
+	FieldClearBit(expanded_x, 0);
+	uint8_t trace = FieldTrace(expanded_x);
+	if ((trace != 0 && FieldIs_Zero(fielda)) || (trace == 0 && FieldEquals(fielda, fieldone))) {
+		FieldSetBit(expanded_x, 0);
+	}
+	field_t * x2 = malloc(sizeof(field_t));
+	FieldMod_Mul(expanded_x, expanded_x, x2);
+	FieldMod_Mul(x2, expanded_x, expanded_y);
+	if (FieldEquals(fielda, fieldone)) {
+		FieldAddM(expanded_y, x2, 0, 0);
+	}
+	FieldAddM(expanded_y, fielda, 0, 0);
+	field_t * invx2 = malloc(sizeof(field_t));
+	FieldInvert(x2, invx2);
+	FieldMod_Mul(expanded_y, invx2, expanded_y);
+	expanded_y = Curvefsquad(expanded_y);
+	uint8_t trace_y = FieldTrace(expanded_y);
+
+	if ((k && trace_y == 0) || (!k && trace_y != 0)) {
+		expanded_y->bytes[0] ^= 1;
+	}
+	FieldMod_Mul(expanded_y, x, expanded_y);
+}
+
+field_t * Curvefsquad(field_t * field) {
+	
+	field_t * ret = Curvefsquad_odd(field);
+
+	g2fmffmod(ret->bytes, ret->length, ret->bytes, ret->length, ret->bytes);
+	return ret;
+}
+
+field_t * Curvefsquad_odd(field_t * field) {
+	uint32_t bitl_m = Curve_m;
+	uint32_t range_to = (bitl_m - 1) / 2;
+	field_t * val_a = malloc(sizeof(field_t));
+	g2fmffmod(field->bytes, field->length, val_a->bytes, val_a->length, val_a->bytes);
+
+	field_t * val_z = malloc(sizeof(field_t));
+	memcpy(val_z, val_a, sizeof(field_t));
+
+	for (size_t idx = 1; idx <= range_to; idx += 1) {
+		FieldMod_Sqr(val_z, val_z);
+		FieldMod_Sqr(val_z, val_z);
+		g2fmffmod(val_z->bytes, val_z->length, val_a->bytes, val_a->length, val_z->bytes);
+	}
+	field_t * val_w = malloc(sizeof(field_t));
+	FieldMod_Mul(val_z, val_z, val_w);
+	FieldAddM(val_w, val_z, 0, 0);
+
+	if (FieldEquals(val_w, val_a)) {
+		return val_z;
+	}
+
+	return 0;
+}
 
 //bool CurveContainsPoint(point_t * point) {
 	//field_t * lh = FieldAdd(point->x);

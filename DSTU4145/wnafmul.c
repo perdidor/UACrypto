@@ -38,28 +38,30 @@ uint8_t bitLengths[256] = {
 	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
 };
 
-void PointPrecomp(point_t * point, size_t width) {
-	size_t len_off = width - 2 >= 0 ? width - 2 : 0;
-	size_t len = 1 << len_off;
-	point_t * rpos = (point_t *)(point->_precomp->rpos_points);
-	point_t * newrneg_points = (point_t *)(point->_precomp->rneg_points);
-	size_t i = point->_precomp->rpos_length;
-	if (point->_precomp->rneg_length == 0) {
-		newrneg_points = malloc(point->_precomp->rpos_length * sizeof(point_t));
-		memcpy(&newrneg_points[0], PointNegate(point), sizeof(point_t));
+void PointPrecomp(point_t * point, uint32_t width) {
+	uint32_t len_off = (width >= 2) ? (width - 2) : 0;
+	uint8_t len = 1 << len_off;
+	//point_t * rpos = &point->precomp_pos;
+	//point_t * newrneg_points = malloc(sizeof(point_precomputed_t) * 8);
+	//memcpy(newrneg_points, &point->precomp_neg, sizeof(point_precomputed_t) * 8);
+	size_t i = 9;
+	if (PointIsZero((point_t *)&point->precomp_neg[0])) {
+		//newrneg_points = malloc(point->_precomp->rpos_length * sizeof(point_t));
+		memcpy(&point->precomp_neg[0], PointNegate(point), sizeof(point_t));
 	}
 
 	if(len == 1) {
 		return;
 	}
 
-	point_t * twice = (point_t *)point->twice_point;
-	if (twice == 0) {
-		point->twice_point = (uint8_t *)PointTwice(point);
+	if (PointIsZero((point_t *)&point->twice_point)) {
+		PointTwice(point, point);
+		memcpy(&point->twice_point, point, sizeof(point_t));
 	}
 
 	for (;i < len; i++) {
-		memcpy(&rpos[i], PointAdd(twice, &rpos[i-1]), sizeof(point_t));
-		memcpy(&newrneg_points[i], PointNegate(&rpos[i]), sizeof(point_t));
+		PointAdd((point_t *)&point->twice_point, (point_t *)&point->precomp_neg[i-1], (point_t *)&point->twice_point);
+		memcpy(&point->precomp_neg[i], &point->twice_point, sizeof(point_t));
+		memcpy(&point->precomp_neg[i], PointNegate((point_t *)&point->precomp_neg[i]), sizeof(point_t));
 	}
 }

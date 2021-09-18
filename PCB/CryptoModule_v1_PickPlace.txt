@@ -1,0 +1,19 @@
+* Pick and place file for:"CryptoModule_v1.lay6" / 18.09.2021 11:37:24
+*
+*  All coordinates in mm, rotation in degrees COUNTER-CLOCKWISE
+*
+* ¹  	Layer	Ref# 	Pos.-X	Pos.-Y	Rot.
+*
+1	Top	C1	4.89	-8.16	0
+2	Top	C2	21.56	-10.17	0
+3	Top	C3	13.83	-17.96	90
+4	Top	C4	13.31	-2.08	90
+5	Top	D1	33.18	-4.73	180
+6	Top	D2	36.99	-10.86	90
+7	Top	D3	6.33	-17.56	270
+8	Top	D4	36.86	-4.73	180
+9	Top	IC1	13.221	-10.088	0
+10	Top	R1	31.24	-4.73	0
+11	Top	R2	6.33	-15.92	90
+12	Top	R3	22.41	-12.69	90
+13	Top	R4	34.92	-4.73	0

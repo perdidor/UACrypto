@@ -13,7 +13,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-uint32_t * CurveCalc_Modulus();
+void CurveCalc_Modulus(uint32_t * res);
 
 void CurveExpandXtoY(field_t * x, field_t * expanded_x, field_t * expanded_y);
 field_t * Curvefsquad(field_t * field);

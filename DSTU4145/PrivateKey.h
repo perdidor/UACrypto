@@ -16,7 +16,7 @@
 
 uint32_t Priv_param_d[8];
 uint32_t Priv_mod_bits[3];
-size_t Priv_mod_words;
+uint8_t Priv_mod_words;
 uint8_t Priv_sbox[64];
 
 uint32_t Curve_mod_tmp[22];
@@ -33,5 +33,7 @@ uint32_t Curve_field_order[17];
 uint32_t Curve_field_zero[1];
 uint32_t Curve_basepoint_field_x[18];
 uint32_t Curve_basepoint_field_y[9];
+
+void SignHash(uint8_t * hashvalue);
 
 #endif /* PRIVATEKEY_H_ */

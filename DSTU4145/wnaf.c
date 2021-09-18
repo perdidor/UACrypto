@@ -18,35 +18,38 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 uint32_t DEFAULT_CUTOFFS[] = { 13, 41, 121, 337, 897, 2305 };
 
-size_t windowNaf(uint32_t width, field_t * field, int * resarray) {
-	field_t * f = FieldClone(field);
-	size_t f_len = FieldBitLength(f);
-	size_t ret_len = floor(f_len / width + 1);
-	resarray = malloc(ret_len * sizeof(int));
+uint32_t windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
+	field_t f;
+	memcpy(&f, field, sizeof(field_t));
+	memcpy(&f.bytes[0], &field->bytes[0], sizeof(uint32_t) * f.length);
+	int f_len = FieldBitLength(&f);
+	uint32_t ret_len = floor(f_len / width + 1);
+	//resarray = malloc(f_len * sizeof(int32_t));
 	uint32_t pow2 = 1 << width;
 	uint32_t masbigint = pow2 - 1;
 	uint32_t sign = pow2 >> 1;
 
 	bool carry = false;
-	uint32_t length = 0, pos = 0;
-	uint32_t digit, zeroes;
+	int32_t length = 0, pos = 0;
+	int32_t digit = 0, zeroes = 0;
 
-	for (pos = 0; pos <= f_len;)
+	while (pos <= f_len && length < 51)
 	{
-		if (FieldTestBit(pos, f) == carry)
+		if (FieldTestBit(pos, &f) == carry)
 		{
 			++pos;
 			continue;
 		}
 
-		FieldShiftRightM(f, pos);
+		FieldShiftRightM(&f, pos);
 
-		digit = f->bytes[0] & masbigint;
+		digit = (f.bytes[0] & masbigint);
 
-		if (carry)
+		if (carry == 1)
 		{
 			++digit;
 		}
@@ -57,8 +60,8 @@ size_t windowNaf(uint32_t width, field_t * field, int * resarray) {
 			digit -= pow2;
 		}
 
-		zeroes = length > 0 ? pos - 1 : pos;
-		resarray[length++] = (digit << 16) | zeroes;
+		zeroes = ((length > 0) ? (pos - 1) : pos);
+		resarray[length++] = (int32_t)((int32_t)digit << 16) | (int32_t)zeroes;
 		pos = width;
 	}
 
@@ -69,7 +72,7 @@ size_t windowNaf(uint32_t width, field_t * field, int * resarray) {
 	return ret_len;
 }
 
-size_t getWindowSize(uint32_t bits) {
+uint32_t getWindowSize(uint32_t bits) {
 	uint8_t idx = 0;
 	for ( ;idx < 6; idx++)
 	{

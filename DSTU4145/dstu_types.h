@@ -28,22 +28,21 @@ typedef enum {
 
 typedef struct {
 	bool _is_field;
-	size_t length;
+	int length;
 	uint32_t * bytes;
 } field_t;
 
 typedef struct {
-	uint8_t * rpos_points;
-	uint8_t * rneg_points;
-	size_t rpos_length;
-	size_t rneg_length;
-} point_precomp_t;
+	field_t x;
+	field_t y;
+} point_precomputed_t;
 
 typedef struct {
-	field_t * x;
-	field_t * y;
-	uint8_t * twice_point;
-	point_precomp_t * _precomp;
+	field_t x;
+	field_t y;
+	point_precomputed_t twice_point;
+	point_precomputed_t precomp_neg[8];
+	point_precomputed_t precomp_pos[8];
 } point_t;
 
 //typedef struct {

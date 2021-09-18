@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-uint32_t g2fmblength(uint32_t * bytes, size_t len);
-uint32_t * g2fmshiftRight(uint32_t * bytes, size_t len, uint32_t right, bool inplace);
+uint32_t g2fmblength(uint32_t * bytes, int len);
+void g2fmshiftRight(uint32_t * bytes, size_t len, uint32_t right);
 void g2fmmul_1x1(uint32_t * ret, uint16_t offset, uint32_t a, uint32_t b);
 void g2fmmul_2x2(uint32_t a1, uint32_t a0, uint32_t b1, uint32_t b0, uint32_t * ret);
 void g2fmfmul(uint32_t * a, size_t alen, uint32_t * b, size_t blen, uint32_t * s, size_t slen);

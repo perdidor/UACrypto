@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-size_t windowNaf(uint32_t width, field_t * field, int * resarray);
-size_t getWindowSize(uint32_t bits);
+uint32_t windowNaf(uint32_t width, field_t * field, int32_t * resarray);
+uint32_t getWindowSize(uint32_t bits);
 
 
 #endif /* WNAF_H_ */
