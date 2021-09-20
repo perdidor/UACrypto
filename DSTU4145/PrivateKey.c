@@ -38,7 +38,7 @@ uint32_t Curve_field_zero[1] = { 0 };
 uint32_t Curve_basepoint_field_x[18] = { 3637645239, 883550428, 454084131, 2059702730, 812416512, 1439507979, 2098109292, 707391264, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint32_t Curve_basepoint_field_y[9] = { 1457001711, 2339384561, 2849377175, 3867225235, 4003475714, 2681009880, 4148483140, 109499423, 1 };
 
-uint32_t erand_bytes[8] = { 2082397019, 1468370442, 823178231, 2862269997, 2052372100, 4252500519, 3735157276, 574723566 };
+uint32_t erand_bytes[9] = { 1735584209, 2323882957, 2410426351, 2233797261, 3727886745, 4055813777, 2664048444, 2043138973, 0 };
 
 uint32_t basepointporecompneg1x[9] = { 3637645239, 883550428, 454084131, 2059702730, 812416512, 1439507979, 2098109292, 707391264, 0 };
 uint32_t basepointporecompneg1y[9] = { 2383027032, 3218719789, 2999373236, 2621816153, 3737931522, 3389116627, 2320125736, 749681471, 1 };
@@ -88,18 +88,37 @@ uint32_t basepointporecomppos7y[9] = { 3158260509, 1157178330, 2130681917, 22452
 uint32_t basepointporecomppos8x[9] = { 3366835394, 2171820301, 316349421, 1931728038, 2059043711, 374821021, 3833875755, 3011852200, 1 };
 uint32_t basepointporecomppos8y[9] = { 2517291899, 2656498756, 666253829, 786974442, 1997392143, 2546440299, 3261294553, 2928969058, 1 };
 
+uint8_t * ArrayAddZero(uint8_t * array, uint8_t len, bool reorder) {
+	uint8_t newdatalen = len + 1;
+	uint8_t * res = malloc(newdatalen);
+	int index = 0;
+	if (!reorder) {
+		res[index] = 0;
+	} else {
+		res[len] = 0;
+	}
+	index++;
+	while (index < newdatalen)
+	{
+		res[index] = array[(reorder) ? (len - index) : (index - 1)];
+		index++;
+	}
+	return res;
+}
+
 void SignHash(uint8_t * hashvalue) {
 	field_t hash_v;
 	field_t rand_e;
 	//field_t basex;
 	//field_t basey;
 	field_t r;
-	FieldFromByteArray(hashvalue, 32, 18, &hash_v);
+	uint8_t * withzero = ArrayAddZero(hashvalue, 32, true);
+	FieldFromByteArray(withzero, 33, 9, &hash_v);
 	//FieldCreateRandom(&rand_e);
-	rand_e.length = 8;
+	rand_e.length = 9;
 	rand_e._is_field = true;
 	rand_e.bytes = malloc(sizeof(uint32_t) * 8);
-	memcpy(rand_e.bytes, erand_bytes, sizeof(uint32_t) * 8);
+	memcpy(rand_e.bytes, erand_bytes, sizeof(uint32_t) * 9);
 	//FieldFromUint32Buf(Curve_basepoint_field_x, 18, &basex);
 	//FieldFromUint32Buf(Curve_basepoint_field_y, 9, &basey);
 	point_t basepoint;
@@ -142,13 +161,13 @@ void SignHash(uint8_t * hashvalue) {
 	FieldFromUint32Buf(Curve_basepoint_field_x, 18, &basepoint.x);
 	FieldFromUint32Buf(Curve_basepoint_field_y, 9, &basepoint.y);
 	point_t eG;
-	//PointMulPos(&basepoint, &rand_e, &eG);
-	field_t testx;
-	FieldFromUint32Buf(basepointporecomppos8x, 9, &testx);
-	//FieldMod_Mul(&hash_v, &testx, &r);
+	PointMulPos(&basepoint, &rand_e, &eG);
+	//field_t testx;
+	//FieldFromUint32Buf(basepointporecomppos8x, 9, &testx);
+	FieldMod_Mul(&hash_v, &eG.x, &r);
 	field_t r2;
-	FieldMod_Mul(&hash_v, &testx, &r2);
-	//FieldTruncate(&r, &r2);
+	//FieldMod_Mul(&hash_v, &testx, &r2);
+	FieldTruncate(&r, &r2);
 	bignumber_t * R = malloc(sizeof(bignumber_t));
 	R->Length = r2.length;
 	R->words = &r2.bytes[0];

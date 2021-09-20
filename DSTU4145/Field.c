@@ -5,12 +5,14 @@
  *  Author: root
  */ 
 #include "Curve.h"
+#include "Point.h"
 #include "gf2m.h"
 #include "dstu_types.h"
 #include "Field.h"
 #include "ConvertHelper.h"
 #include "PRNG.h"
 #include "PrivateKey.h"
+#include "USART.h"
 #include <math.h>
 #include <avr/io.h>
 #include <stdio.h>
@@ -38,10 +40,10 @@ void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t
 	size_t tmpsize = ceil(len / 4);
 	tmpsize = (tmpsize > max_size ? tmpsize : max_size);
 	res->bytes = malloc(sizeof(uint32_t) * tmpsize);
-	uint8_t code = 0;
-	uint8_t bpos = 0;
-	uint8_t vidx = 0;
-	uint8_t idx = len;
+	uint32_t code = 0;
+	uint32_t bpos = 0;
+	uint32_t vidx = 0;
+	uint32_t idx = len - 1;
 	for(; idx > 0; idx-- ) {
 		code = in_value[idx];
 		bpos = bpos % 4;
@@ -49,7 +51,7 @@ void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t
 		if (code < 0) {
 			code = 256 + code;
 		}
-		res->bytes[vidx] |= code << (bpos*8);
+		res->bytes[vidx] |= (code << (bpos*8));
 
 		if(bpos == 3) vidx++;
 		bpos++;
@@ -67,14 +69,16 @@ void FieldFromUint32Buf(uint32_t * in_value, size_t len, field_t * res) {
 
 void FieldMod_Mul(field_t * thisfield, field_t * thatfield, field_t * res) {
 	uint32_t s[22];
-	for (int i = 0; i < 22; i++)
-	{
-		s[i] = Curve_mod_tmp[i];
-	}
+	//for (int i = 0; i < 22; i++)
+	//{
+		//s[i] = Curve_mod_tmp[i];
+	//}
+	memcpy(&s[0], Curve_mod_tmp[0], sizeof(uint32_t) * 22);
 	g2fmfmul(thisfield->bytes, thisfield->length, thatfield->bytes, thatfield->length, s, 22);
 	uint32_t * s2 = malloc(Priv_mod_words * sizeof(uint32_t));
 	g2fmffmod(s, 22, Priv_mod_bits, 3, s2);
 	FieldFromUint32Buf(s2, Priv_mod_words, res);
+	free(s2);
 }
 
 void FieldMod_Sqr(field_t * thisfield, field_t * res) {
@@ -127,6 +131,7 @@ void FieldAddM(field_t * thisfield, field_t * thatfield, uint32_t * _from, int f
 
 void FieldAdd(field_t * thisfield, field_t * thatfield, field_t * res) {
 	FieldFromCurve(res);
+	//PrintDebugUInt32Array(res->bytes, res->length);
 	FieldAddM(res, thatfield, thisfield->bytes, thisfield->length);
 }
 

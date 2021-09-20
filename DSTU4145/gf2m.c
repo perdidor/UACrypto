@@ -183,9 +183,10 @@ void g2fmfmul(uint32_t * a, size_t alen, uint32_t * b, size_t blen, uint32_t * s
 	//size_t b_len = blen/sizeof(uint32_t);
 	//size_t s_len = slen/sizeof(uint32_t);
 
-	for (int i = 0; i < slen; i++) {
-		s[i] = 0;
-	}
+	//for (int i = 0; i < slen; i++) {
+		//s[i] = 0;
+	//}
+	memset(s, 0x00, slen * sizeof(uint32_t));
 
 	uint32_t x22[6];
 

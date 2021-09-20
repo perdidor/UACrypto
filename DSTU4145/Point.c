@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "PrivateKey.h"
+#include "USART.h"
 
 uint32_t dummycar;
 
@@ -39,6 +40,22 @@ point_t * PointConstructor(field_t * input_x, field_t * input_y) {
 	return res;
 }
 
+void PrintDebugUInt32Array(uint32_t * arr, uint32_t arrlen)
+{
+	char buff[32];
+	//sprintf(buff, "UInt32 Bytes: %d\r\n: {", arrlen);
+	//EXT_UART_Transmit(buff);
+	for (int a = 0; a < arrlen; a++){
+		uint32_t asdasd = 0;
+		memcpy(&asdasd, &arr[a], sizeof(uint32_t));
+		sprintf(buff, " %d,", asdasd);
+		//EXT_UART_Transmit(buff);
+	}
+	//sprintf(buff, " %d }", arr[arrlen - 1]);
+	//EXT_UART_Transmit(buff);
+	//EXT_CRLF();
+}
+
 uint32_t suka(field_t * asd) {
 	uint32_t asdd = asd->bytes[1];
 	if (asdd == 21) {
@@ -46,6 +63,9 @@ uint32_t suka(field_t * asd) {
 	}
 	return asdd;
 }
+
+static field_t param_a, tmp2, invertedtmp, lbdtmp, y0, y1, xf, yf;
+static field_t x2, tmp;
 
 void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 	if (PointIsZero(thispoint)) {
@@ -56,8 +76,7 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 		memcpy(res, thispoint, sizeof(point_t));
 		return;
 	}
-	field_t param_a, tmp, tmp2, invertedtmp, lbdtmp, y0, y1, xf, yf;
-	uint32_t asd = 0, asd1 = 1;
+//	field_t param_a, tmp2, invertedtmp, lbdtmp, y0, y1, xf, yf;
 	FieldFromUint32Buf(Curve_field_zero, 1, &xf);
 	FieldFromUint32Buf(Curve_field_zero, 1, &yf);
 	point_t * p2 = PointConstructor(&xf, &yf);
@@ -71,6 +90,7 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 		y0.bytes[i] = thispoint->y.bytes[i];
 	}
 	y1.length = p1->y.length;
+	y1.bytes = malloc(p1->y.length * sizeof(uint32_t));
 	for (int i = 0; i < p1->y.length; i++)
 	{
 		y1.bytes[i] = p1->y.bytes[i];
@@ -87,8 +107,6 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 	FieldFromUint32Buf(x1bytes, 10, &x1);
 	FieldFromUint32Buf(Curve_field_a, 10, &param_a);
 	if (!FieldEquals(&thispoint->x, &p1->x)) {
-		static uint32_t tmpint32 = 0;
-		static field_t x2;
 		FieldAdd(&y0, &y1, &tmp);
 		FieldAdd(&thispoint->x, &p1->x, &tmp2);
 		FieldInvert(&tmp2, &invertedtmp);
@@ -98,16 +116,11 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 			lbdbytes[i] = lbd.bytes[i];
 		}
 		FieldMod_Mul(&lbd, &lbd, &lbdtmp);
-
 		FieldFromUint32Buf(lbdbytes, 9, &tmplbd);
-
 		FieldAdd(&param_a, &lbdtmp, &x2);
-
 		FieldAddM(&x2, &tmplbd, 0, 0);
-		tmpint32 = suka(&x2);
 		FieldFromUint32Buf(x0bytes, 10, &x0);
 		FieldAddM(&x2, &x0, 0, 0);
-
 		FieldAddM(&x2, &p1->x, 0, 0);
 	} else {
 		if (!FieldEquals(&y0, &y1) || FieldIs_Zero(&p1->x)) {
@@ -124,6 +137,7 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 	}
 	field_t y2, tmpx;
 	FieldFromUint32Buf(lbdbytes, 9, &lbd);
+	//PrintDebugUInt32Array(&lbd.bytes[0], lbd.length);
 	FieldAdd(&p1->x, &x2, &tmpx);
 	FieldMod_Mul(&lbd, &tmpx, &y2);
 	FieldAddM(&y2, &x2, 0, 0);
@@ -132,12 +146,6 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 	memcpy(&res->y, &y2, y2.length);
 	res->x.length = x2.length;
 	res->y.length = y2.length;
-	//free(xf);
-	//free(yf);
-	//free(y0);
-	//free(y1);
-	//free(x2);
-	asd = asd1;
 }
 
 bool PointIsZero(point_t * point) {

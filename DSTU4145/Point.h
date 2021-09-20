@@ -24,5 +24,6 @@ void PointMulPos(point_t * point, field_t * big_k, point_t * res);
 bool PointEquals(point_t * p1, point_t * p2);
 
 uint32_t suka(field_t * asd);
+void PrintDebugUInt32Array(uint32_t * arr, uint32_t arrlen);
 
 #endif /* POINT_H_ */
