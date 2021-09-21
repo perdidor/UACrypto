@@ -47,7 +47,7 @@ void PointPrecomp(point_t * point, uint32_t width) {
 	size_t i = 9;
 	if (PointIsZero((point_t *)&point->precomp_neg[0])) {
 		//newrneg_points = malloc(point->_precomp->rpos_length * sizeof(point_t));
-		memcpy(&point->precomp_neg[0], PointNegate(point), sizeof(point_t));
+		//memcpy(&point->precomp_neg[0], PointNegate(point), sizeof(point_t));
 	}
 
 	if(len == 1) {
@@ -62,6 +62,6 @@ void PointPrecomp(point_t * point, uint32_t width) {
 	for (;i < len; i++) {
 		PointAdd((point_t *)&point->twice_point, (point_t *)&point->precomp_neg[i-1], (point_t *)&point->twice_point);
 		memcpy(&point->precomp_neg[i], &point->twice_point, sizeof(point_t));
-		memcpy(&point->precomp_neg[i], PointNegate((point_t *)&point->precomp_neg[i]), sizeof(point_t));
+		//memcpy(&point->precomp_neg[i], PointNegate((point_t *)&point->precomp_neg[i]), sizeof(point_t));
 	}
 }

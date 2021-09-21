@@ -33,6 +33,7 @@ uint32_t Curve_field_order[17];
 uint32_t Curve_field_zero[1];
 uint32_t Curve_basepoint_field_x[18];
 uint32_t Curve_basepoint_field_y[9];
+uint32_t erand_bytes[9];
 
 void SignHash(uint8_t * hashvalue);
 

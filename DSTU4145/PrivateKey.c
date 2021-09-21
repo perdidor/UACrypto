@@ -16,6 +16,7 @@
 #include "Field.h"
 #include "Point.h"
 #include "bnops.h"
+#include "USART.h"
 
 
 uint32_t Priv_param_d[8] = { 2082397019, 1468370442, 823178231, 2862269997, 2052372100, 4252500519, 3735157276, 574723566 };
@@ -115,10 +116,11 @@ void SignHash(uint8_t * hashvalue) {
 	uint8_t * withzero = ArrayAddZero(hashvalue, 32, true);
 	FieldFromByteArray(withzero, 33, 9, &hash_v);
 	//FieldCreateRandom(&rand_e);
-	rand_e.length = 9;
-	rand_e._is_field = true;
-	rand_e.bytes = malloc(sizeof(uint32_t) * 8);
-	memcpy(rand_e.bytes, erand_bytes, sizeof(uint32_t) * 9);
+	//rand_e.length = 9;
+	//rand_e._is_field = true;
+	//rand_e.bytes = malloc(sizeof(uint32_t) * 8);
+	//memcpy(rand_e.bytes, erand_bytes, sizeof(uint32_t) * 9);
+	FieldFromUint32Buf(erand_bytes, 9, &rand_e);
 	//FieldFromUint32Buf(Curve_basepoint_field_x, 18, &basex);
 	//FieldFromUint32Buf(Curve_basepoint_field_y, 9, &basey);
 	point_t basepoint;
@@ -156,35 +158,26 @@ void SignHash(uint8_t * hashvalue) {
 	FieldFromUint32Buf(basepointporecomppos7y, 9, &basepoint.precomp_pos[6].y);
 	FieldFromUint32Buf(basepointporecomppos8y, 9, &basepoint.precomp_pos[7].y);
 
-	//basepoint.x = &basex;
-	//basepoint.y = &basey;
 	FieldFromUint32Buf(Curve_basepoint_field_x, 18, &basepoint.x);
 	FieldFromUint32Buf(Curve_basepoint_field_y, 9, &basepoint.y);
 	point_t eG;
 	PointMulPos(&basepoint, &rand_e, &eG);
-	//field_t testx;
-	//FieldFromUint32Buf(basepointporecomppos8x, 9, &testx);
 	FieldMod_Mul(&hash_v, &eG.x, &r);
 	field_t r2;
-	//FieldMod_Mul(&hash_v, &testx, &r2);
 	FieldTruncate(&r, &r2);
-	bignumber_t * R = malloc(sizeof(bignumber_t));
-	R->Length = r2.length;
-	R->words = &r2.bytes[0];
-	bignumber_t * BigD = malloc(sizeof(bignumber_t));
-	BigD->Length = 8;
-	BigD->words = &Priv_param_d[0];
-	bignumber_t * BigRandE = malloc(sizeof(bignumber_t));
-	BigRandE->Length = rand_e.length;
-	BigRandE->words = &rand_e.bytes[0];
-	bignumber_t * BigOrder = malloc(sizeof(bignumber_t));
-	BigOrder->Length = 17;
-	BigOrder->words = &Curve_field_order[0];
+	bignumber_t R;
+	BNFromField(&r2, &R);
+	bignumber_t BigD;
+	BNFromUInt32Buf(&Priv_param_d[0], 8, &R);
+	bignumber_t BigRandE;
+	BNFromField(&rand_e, &BigRandE);
+	bignumber_t BigOrder;
+	BNFromUInt32Buf(&Curve_field_order[0], 17, &BigOrder);
 	bignumber_t bn1;
-	BNComb10MulTo(BigD, R, &bn1);
+	BNComb10MulTo(&BigD, &R, &bn1);
 	divmodres_t s;
-	BNDivMod(&bn1, BigOrder, true, &s);
+	BNDivMod(&bn1, &BigOrder, true, &s);
 	bignumber_t sukka;
-	BNAdd(s.mod, BigRandE, &sukka);
-	BNDivMod(&sukka, BigOrder, true, &s);
+	BNAdd(s.mod, &BigRandE, &sukka);
+	BNDivMod(&sukka, &BigOrder, true, &s);
 }

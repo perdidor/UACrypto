@@ -13,6 +13,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "dstu_types.h"
 
 typedef struct {
 	uint32_t * words;
@@ -38,6 +39,8 @@ int8_t BNUCmp(bignumber_t * thisnum, bignumber_t * thatnum);
 void BNiAdd(bignumber_t * thisbn, bignumber_t * thatbn);
 void BNAdd(bignumber_t * thisnum, bignumber_t * thatnum, bignumber_t * res);
 void BNDivMod(bignumber_t * thisbn, bignumber_t * thatbn, bool positive, divmodres_t * res);
+void BNFromField(field_t * field, bignumber_t * res);
+void BNFromUInt32Buf(uint32_t * array, int datalen, bignumber_t * res);
 
 
 

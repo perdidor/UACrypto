@@ -24,11 +24,10 @@ uint32_t DEFAULT_CUTOFFS[] = { 13, 41, 121, 337, 897, 2305 };
 
 uint32_t windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
 	field_t f;
-	memcpy(&f, field, sizeof(field_t));
-	memcpy(&f.bytes[0], &field->bytes[0], sizeof(uint32_t) * f.length);
-	int f_len = FieldBitLength(&f);
+	FieldClone(field, &f);
+	uint32_t f_len = FieldBitLength(&f);
 	uint32_t ret_len = floor(f_len / width + 1);
-	//resarray = malloc(f_len * sizeof(int32_t));
+	//resarray = malloc(ret_len * sizeof(int32_t));
 	uint32_t pow2 = 1 << width;
 	uint32_t masbigint = pow2 - 1;
 	uint32_t sign = pow2 >> 1;
@@ -37,7 +36,7 @@ uint32_t windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
 	int32_t length = 0, pos = 0;
 	int32_t digit = 0, zeroes = 0;
 
-	while (pos <= f_len && length < 51)
+	while (pos <= f_len && length < ret_len)
 	{
 		if (FieldTestBit(pos, &f) == carry)
 		{
@@ -61,15 +60,16 @@ uint32_t windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
 		}
 
 		zeroes = ((length > 0) ? (pos - 1) : pos);
-		resarray[length++] = (int32_t)((int32_t)digit << 16) | (int32_t)zeroes;
+		resarray[length] = (int32_t)((int32_t)digit << 16) | (int32_t)zeroes;
+		length++;
 		pos = width;
 	}
 
-	if (ret_len > length) {
-		return length;
-	}
+	//if (ret_len > length) {
+		//return length;
+	//}
 
-	return ret_len;
+	return length;
 }
 
 uint32_t getWindowSize(uint32_t bits) {

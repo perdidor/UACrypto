@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+#include "USART.h"
 
 uint32_t g2fmblength(uint32_t * bytes, int len) {
 	uint32_t r = 1;
@@ -26,7 +27,7 @@ uint32_t g2fmblength(uint32_t * bytes, int len) {
 
 	int nz = len - 1;
 
-	while (bytes[nz] == 0 && nz >= 0) {
+	while ((bytes[nz] == 0) && (nz >= 0)) {
 		nz--;
 	}
 
@@ -277,6 +278,10 @@ void g2fmfinv(uint32_t * a, size_t alen, uint32_t * p, size_t plen, uint32_t * r
 	uint32_t c[10];
 	uint32_t v[10];
 	uint32_t u[10];
+	memset(b, 0x00, 10 * sizeof(uint32_t));
+	memset(c, 0x00, 10 * sizeof(uint32_t));
+	memset(v, 0x00, 10 * sizeof(uint32_t));
+	memset(u, 0x00, 10 * sizeof(uint32_t));
 	//size_t p_len = plen/sizeof(uint32_t);
 
 	b[0] = 1;
@@ -294,11 +299,11 @@ void g2fmfinv(uint32_t * a, size_t alen, uint32_t * p, size_t plen, uint32_t * r
 
 	while (1) {
 		//uint32_t sad = u[0];
-		while (ubits >= 0 && !((u[0] & 1) == 1)) {
+		while ((ubits >= 0) && !((u[0] & 1) == 1)) {
 			uint32_t u0 = u[0];
 			uint32_t b0 = b[0];
-			uint32_t u1;
-			uint32_t b1;
+			uint32_t u1 = 0;
+			uint32_t b1 = 0;
 
 			uint32_t mask = b0 & 1 ? 0xffffffff : 0;
 			b0 ^= p[0] & mask;
@@ -318,19 +323,19 @@ void g2fmfinv(uint32_t * a, size_t alen, uint32_t * p, size_t plen, uint32_t * r
 			ubits--;
 		}
 
-		if (ubits <= 32 && u[0] == 1) break;
+		if ((ubits <= 32) && (u[0] == 1)) break;
 
 		if (ubits < vbits) {
 			uint32_t tmp = ubits;
 			ubits = vbits;
 			vbits = tmp;
 			uint32_t tmparr[alen];
-			memcpy(tmparr, u, alen * 4);
-			memcpy(u, v, alen * 4);
-			memcpy(v, tmparr, alen * 4);
-			memcpy(tmparr, b, alen * 4);
-			memcpy(b, c, alen * 4);
-			memcpy(c, tmparr, alen * 4);
+			memcpy(&tmparr[0], &u[0], alen * 4);
+			memcpy(&u[0], &v[0], alen * 4);
+			memcpy(&v[0], &tmparr[0], alen * 4);
+			memcpy(&tmparr[0], &b[0], alen * 4);
+			memcpy(&b[0], &c[0], alen * 4);
+			memcpy(&c[0], &tmparr[0], alen * 4);
 			//free(tmparr);
 		}
 
@@ -349,6 +354,7 @@ void g2fmfinv(uint32_t * a, size_t alen, uint32_t * p, size_t plen, uint32_t * r
 	//for (int idx = 0; idx < alen; idx++) {
 		//ret[idx] = b[idx];
 	//}
+	//PrintDebugUInt32Array(&b[0], 10);
 	memcpy(ret, b, alen * 4);
 	//free(b);
 	//free(c);

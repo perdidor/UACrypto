@@ -59,3 +59,20 @@ void EXT_UART_TransmitRawData(uint8_t * outarr, size_t arrlen) {
 		UDR0 = outarr[i];
 	}
 }
+
+void PrintDebugUInt32Array(uint32_t * arr, uint32_t arrlen)
+{
+	char buff[32];
+	//sprintf(buff, "UInt32 Bytes: %d\r\n: {", arrlen);
+	//EXT_UART_Transmit(buff);
+	for (int a = 0; a < arrlen; a++){
+		uint32_t asdasd = 0;
+		memcpy(&asdasd, &arr[a], sizeof(uint32_t));
+		sprintf(buff, " %lu,", asdasd);
+		EXT_CRLF();
+		//EXT_UART_Transmit(buff);
+	}
+	//sprintf(buff, " %d }", arr[arrlen - 1]);
+	//EXT_UART_Transmit(buff);
+	//EXT_CRLF();
+}
