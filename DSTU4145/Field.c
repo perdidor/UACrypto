@@ -37,7 +37,6 @@ void FieldFromHexStr(char * in_value, field_t * newfield) {
 }
 
 void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t * res) {
-	//field_t * res = malloc(sizeof(field_t));
 	size_t tmpsize = ceil(len / 4);
 	tmpsize = (tmpsize > max_size ? tmpsize : max_size);
 	res->bytes = malloc(sizeof(uint32_t) * tmpsize);
@@ -61,19 +60,23 @@ void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t
 	res->_is_field = true;
 }
 
-void FieldFromUint32Buf(uint32_t * in_value, size_t len, field_t * res) {
-	res->bytes = malloc(len * sizeof(uint32_t));
-	memcpy(&res->bytes[0], &in_value[0], len * sizeof(uint32_t));
+void FreeField(field_t * field) {
+	free(field->bytes);
+	field->length = 0;
+}
+
+void FieldFromUint32Buf(uint32_t * in_value, int len, field_t * res) {
 	res->length = len;
+	res->bytes = malloc(res->length * sizeof(uint32_t));
+	for (int i = 0; i < res->length; i++)
+	{
+		res->bytes[i] = in_value[i];
+	}
 	res->_is_field = true;
 }
 
 void FieldMod_Mul(field_t * thisfield, field_t * thatfield, field_t * res) {
 	uint32_t s[22];
-	//for (int i = 0; i < 22; i++)
-	//{
-		//s[i] = Curve_mod_tmp[i];
-	//}
 	memcpy(&s[0], &Curve_mod_tmp[0], sizeof(uint32_t) * 22);
 	g2fmfmul(thisfield->bytes, thisfield->length, thatfield->bytes, thatfield->length, s, 22);
 	uint32_t * s2 = malloc(Priv_mod_words * sizeof(uint32_t));
@@ -92,13 +95,11 @@ void FieldAddM(field_t * thisfield, field_t * thatfield, uint32_t * _from, int f
 	uint32_t to_b[thisfield->length];
 	memcpy(&that_b, thatfield->bytes, thatfield->length * sizeof(uint32_t));
 	if (fromlen > 0) {
-		//memcpy(&this_b, _from, fromlen * sizeof(uint32_t));
 		for (int i = 0; i < fromlen; i++)
 		{
 			this_b[i] = _from[i];
 		}
 	} else {
-		//memcpy(&this_b, thisfield->bytes, thisfield->length * sizeof(uint32_t));
 		for (int i = 0; i < thisfield->length; i++)
 		{
 			this_b[i] = thisfield->bytes[i];
@@ -112,7 +113,6 @@ void FieldAddM(field_t * thisfield, field_t * thatfield, uint32_t * _from, int f
 	thatlen;
 
 	if (to_b_len < thatlen) {
-		//iter_len = to_b_len;
 		uint32_t * tmpto_b = malloc(Priv_mod_words * 4);
 		memcpy(&to_b, &tmpto_b, Priv_mod_words * 4);
 		to_b_len = Priv_mod_words;
@@ -123,16 +123,11 @@ void FieldAddM(field_t * thisfield, field_t * thatfield, uint32_t * _from, int f
 	}
 
 	memcpy(&thisfield->bytes[0], &to_b[0], to_b_len * sizeof(uint32_t));
-	//for(uint8_t i = 0; i < to_b_len; i++) {
-		//thisfield->bytes[i] = to_b[i];
-	//}
 	thisfield->length = to_b_len;
-	//free(to_b);
 }
 
 void FieldAdd(field_t * thisfield, field_t * thatfield, field_t * res) {
 	FieldFromCurve(res);
-	//PrintDebugUInt32Array(res->bytes, res->length);
 	FieldAddM(res, thatfield, thisfield->bytes, thisfield->length);
 }
 
@@ -147,8 +142,6 @@ bool FieldIs_Zero(field_t * field) {
 }
 
 bool FieldEquals(field_t * thisfield, field_t * thatfield) {
-	//PrintDebugUInt32Array(&thisfield->bytes[0], thisfield->length);
-	//PrintDebugUInt32Array(&thatfield->bytes[0], thatfield->length);
 	int blen = thisfield->length;
 	int olen = thatfield->length;
 	bool res = true;
@@ -253,6 +246,7 @@ uint8_t * FieldTruncate_Buf8(field_t * field) {
 	size_t newretlen = field->length * 4 - start;
 	uint8_t * newret = malloc(newretlen);
 	memcpy(newret, &ret[start], newretlen);
+	free(ret);
 	return newret;
 }
 
@@ -272,7 +266,6 @@ void FieldInvert(field_t * field, field_t * res) {
 	uint32_t p[9];
 	uint32_t a[10];
 	uint32_t tmpres[10];
-	//size_t fl = (size_t)field->length;
 	g2fmffmod(&field->bytes[0], field->length, Priv_mod_bits, 3, a);
 	CurveCalc_Modulus(p);
 	g2fmfinv(a, 9, p, Priv_mod_words, tmpres);
@@ -289,6 +282,7 @@ void FieldTruncate(field_t * field, field_t * res) {
 		FieldClearBit(res, xbit - 1);
 		xbit = FieldBitLength(res);
 	}
+	FreeField(&tmporderfield);
 }
 
 void FieldCreateRandom(field_t * res) {

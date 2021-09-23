@@ -40,10 +40,20 @@ typedef struct {
 typedef struct {
 	field_t x;
 	field_t y;
-	point_precomputed_t twice_point;
-	point_precomputed_t precomp_neg[8];
-	point_precomputed_t precomp_pos[8];
+	//point_precomputed_t twice_point;
+	//point_precomputed_t precomp_neg[8];
+	//point_precomputed_t precomp_pos[8];
 } point_t;
+
+typedef struct {
+	uint32_t x[9];
+	uint32_t y[9];
+} precomp_t;
+
+typedef struct {
+	precomp_t neg[8];
+	precomp_t pos[8];
+} precomp_set_t;
 
 //typedef struct {
 	//size_t Priv_mod_words;

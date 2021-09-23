@@ -18,7 +18,7 @@
 void FieldFromCurve(field_t * newfield);
 void FieldFromHexStr(char * in_value, field_t * newfield);
 void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t * res);
-void FieldFromUint32Buf(uint32_t * in_value, size_t len, field_t * res);
+void FieldFromUint32Buf(uint32_t * in_value, int len, field_t * res);
 
 
 void FieldMod_Mul(field_t * thisfield, field_t * thatfield, field_t * res);
@@ -42,5 +42,6 @@ uint8_t FieldTrace(field_t * field);
 void FieldTruncate(field_t * field, field_t * res);
 void FieldCreateRandom(field_t * ret);
 field_t * FieldCompress(point_t * point);
+void FreeField(field_t * field);
 
 #endif /* FIELD_H_ */

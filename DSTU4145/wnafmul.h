@@ -25,7 +25,7 @@
 
 uint8_t bitLengths[256];
 
-void PointPrecomp(point_t * point, uint32_t width);
+//void PointPrecomp(point_t * point, uint32_t width);
 
 
 

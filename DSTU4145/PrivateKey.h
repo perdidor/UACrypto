@@ -13,6 +13,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "dstu_types.h"
 
 uint32_t Priv_param_d[8];
 uint32_t Priv_mod_bits[3];
@@ -34,6 +35,8 @@ uint32_t Curve_field_zero[1];
 uint32_t Curve_basepoint_field_x[18];
 uint32_t Curve_basepoint_field_y[9];
 uint32_t erand_bytes[9];
+
+precomp_set_t PreComputedPoints;
 
 void SignHash(uint8_t * hashvalue);
 

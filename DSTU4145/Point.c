@@ -32,49 +32,40 @@ void PointConstructor(field_t * input_x, field_t * input_y, point_t * res) {
 	if (input_y == 0) {
 		CurveExpandXtoY(input_x, &p_x, &p_y);
 	}
-	//point_t * res = malloc(sizeof(point_t));
-	//memcpy(&res->x, p_x, sizeof(field_t));
-	//memcpy(&res->y, p_y, sizeof(field_t));
 	FieldFromUint32Buf(&p_x.bytes[0], p_x.length, &res->x);
 	FieldFromUint32Buf(&p_y.bytes[0], p_y.length, &res->y);
-	//free(p_x);
-	//free(p_y);
-	//return res;
 }
 
 void PointCopy(point_t * from, point_t * to) {
-	FieldFromUint32Buf(&from->x.bytes[0], from->x.length, &to->x);
-	FieldFromUint32Buf(&from->y.bytes[0], from->y.length, &to->y);
-	memcpy(&to->precomp_neg[0], &from->precomp_neg[0], 8 * sizeof(point_precomputed_t));
-	memcpy(&to->precomp_pos[0], &from->precomp_pos[0], 8 * sizeof(point_precomputed_t));
+	FieldFromUint32Buf(from->x.bytes, from->x.length, &to->x);
+	FieldFromUint32Buf(from->y.bytes, from->y.length, &to->y);
+	//memcpy(&to->precomp_neg[0], &from->precomp_neg[0], 8 * sizeof(point_precomputed_t));
+	//memcpy(&to->precomp_pos[0], &from->precomp_pos[0], 8 * sizeof(point_precomputed_t));
 }
 
 void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
-	field_t param_a, tmp2, invertedtmp, lbdtmp, y0, y1, xf, yf, tmp;
+	field_t param_a, tmp2, invertedtmp, lbdtmp, y0, y1, tmp, invertedx1, tmpy1, y2, tmpx, lbd, x2, x0, x1, tmplbd;
+
+	//if ((res->x.length > 0) && (&res->x != 0)) FreeField(&res->x);
+	//if ((res->y.length > 0) && (&res->y != 0)) FreeField(&res->y);
+
 	if (PointIsZero(thispoint)) {
-		memcpy(res, p1, sizeof(point_t));
+		PointCopy(p1, res);
+		//memcpy(res, p1, sizeof(point_t));
 		return;
 	}
 	if (PointIsZero(p1)) {
-		memcpy(res, thispoint, sizeof(point_t));
+		//memcpy(res, thispoint, sizeof(point_t));
+		PointCopy(thispoint, res);
 		return;
 	}
-	xf.length = 0;
-	yf.length = 0;
-	//FieldFromUint32Buf(Curve_field_zero, 1, &xf);
-	//FieldFromUint32Buf(Curve_field_zero, 1, &yf);
-	point_t * p2 = malloc(sizeof(point_t));
-	FieldFromUint32Buf(Curve_field_zero, 1, &p2->x);
-	FieldFromUint32Buf(Curve_field_zero, 1, &p2->y);
-	//memset(p2, 0x00, sizeof(point_t));
-	//PointConstructor(&xf, &yf, &p2);
 
 	FieldFromUint32Buf(thispoint->y.bytes, thispoint->y.length, &y0);
 	FieldFromUint32Buf(p1->y.bytes, p1->y.length, &y1);
 
-	static uint32_t x0bytes[10];
-	static uint32_t x1bytes[10];
-	static field_t lbd, x2, x0, x1, tmplbd;
+	uint32_t x0bytes[10];
+	uint32_t x1bytes[10];
+
 	for (int i = 0; i < thispoint->x.length; i++)
 	{
 		x0bytes[i] = thispoint->x.bytes[i];
@@ -83,7 +74,7 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 	{
 		x1bytes[i] = p1->x.bytes[i];
 	}
-	static uint32_t lbdbytes[10];
+	uint32_t lbdbytes[10];
 	FieldFromUint32Buf(x1bytes, 10, &x1);
 	FieldFromUint32Buf(Curve_field_a, 10, &param_a);
 	if (!FieldEquals(&thispoint->x, &p1->x)) {
@@ -102,42 +93,68 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 		FieldFromUint32Buf(x0bytes, 10, &x0);
 		FieldAddM(&x2, &x0, 0, 0);
 		FieldAddM(&x2, &p1->x, 0, 0);
+		//FreeField(&lbdtmp);
+		//FreeField(&tmplbd);
+		//FreeField(&invertedtmp);
+		//FreeField(&tmp2);
+		//FreeField(&tmp);
 	} else {
-		//PrintDebugUInt32Array(&y0.bytes[0], y0.length);
-		//PrintDebugUInt32Array(&y1.bytes[0], y1.length);
-		//PrintDebugUInt32Array(&p1->x.bytes[0], p1->x.length);
 		if (!FieldEquals(&y0, &y1) || FieldIs_Zero(&p1->x)) {
-			res->x.length = p2->x.length;
-			res->y.length = p2->y.length;
-			FieldFromUint32Buf(&p2->x.bytes[0], p2->x.length, &res->x);
-			FieldFromUint32Buf(&p2->y.bytes[0], p2->y.length, &res->y);
+			res->x.length = 1;
+			res->y.length = 1;
+			res->x.bytes = malloc(sizeof(uint32_t));
+			res->y.bytes = malloc(sizeof(uint32_t));
+			res->x.bytes[0] = 0;
+			res->y.bytes[0] = 0;
+			//FreeField(&y0);
+			//FreeField(&y1);
+			//FreeField(&param_a);
+			//FreeField(&x1);
 			return;
 		};
-		field_t invertedx1, lbdtmp, tmpy1;
 		FieldInvert(&p1->x, &invertedx1);
 		FieldMod_Mul(&y1, &invertedx1, &tmpy1);
 		FieldAdd(&p1->x, &tmpy1, &lbd);
-		FieldMod_Mul(&lbd, &lbd, &lbdtmp);
-		FieldAdd(&lbdtmp, &param_a, &x2);
 		for (int i = 0; i < lbd.length; i++)
 		{
 			lbdbytes[i] = lbd.bytes[i];
 		}
+		FieldMod_Mul(&lbd, &lbd, &lbdtmp);
+		FieldAdd(&lbdtmp, &param_a, &x2);
+		FreeField(&lbd);
+		FieldFromUint32Buf(lbdbytes, 9, &lbd);
 		FieldAddM(&x2, &lbd, 0, 0);
+		//FreeField(&invertedx1);
+		//FreeField(&lbdtmp);
+		//FreeField(&tmpy1);
 	}
-	field_t y2, tmpx;
+	FreeField(&lbd);
 	FieldFromUint32Buf(lbdbytes, 9, &lbd);
-	//PrintDebugUInt32Array(&lbd.bytes[0], lbd.length);
 	FieldAdd(&p1->x, &x2, &tmpx);
 	FieldMod_Mul(&lbd, &tmpx, &y2);
 	FieldAddM(&y2, &x2, 0, 0);
 	FieldAddM(&y2, &y1, 0, 0);
-	//memcpy(&res->x, &x2, x2.length);
-	//memcpy(&res->y, &y2, y2.length);
 	FieldFromUint32Buf(&x2.bytes[0], x2.length, &res->x);
 	FieldFromUint32Buf(&y2.bytes[0], y2.length, &res->y);
 	res->x.length = x2.length;
 	res->y.length = y2.length;
+	FreeField(&tmpx);
+	FreeField(&param_a);
+	FreeField(&x1);
+	FreeField(&lbd);
+	FreeField(&y0);
+	FreeField(&y1);
+	FreeField(&x2);
+	FreeField(&y2);
+	//FreeField(&xf);
+	//FreeField(&yf);
+	//FreeField(&tmp);
+	//FreeField(&y2);
+	//FreeField(&tmpx);
+	//FreeField(&invertedx1);
+	//FreeField(&tmpy1);
+	//FreePoint(p2);
+	//free(p2);
 }
 
 bool PointIsZero(point_t * point) {
@@ -149,84 +166,122 @@ void PointNegate(point_t * point) {
 }
 
 void PointTwice(point_t * point, point_t * res) {
-	//point_t * tmp = malloc(sizeof(point_t));
-	point_t tmp, tmp2;
+	point_t tmp;
+	point_t tmp2;
 	PointCopy(point, &tmp);
-	PointCopy(point, &tmp2);
-	//FieldFromUint32Buf(&point->x.bytes[0], point->x.length, &tmp->x);
-	//FieldFromUint32Buf(&point->y.bytes[0], point->y.length, &tmp->y);
-	//PrintDebugUInt32Array(&point->x.bytes[0], point->x.length);
-	//PrintDebugUInt32Array(&tmp->x.bytes[0], tmp->x.length);
+	PointCopy(&tmp, &tmp2);
 	PointAdd(&tmp, &tmp2, res);
-	//free(tmp);
+	FreePoint(&tmp2);
+	FreePoint(&tmp);
 }
 
 void PointTimesPow2(point_t * point, uint16_t n, point_t * res) {
-	point_t tmp, tmp2;
+	point_t tmp;
+	point_t tmp2;
 	PointCopy(point, &tmp);
-	PointCopy(point, &tmp2);
-	//FieldFromUint32Buf(&point->x.bytes[0], point->x.length, &tmp.x);
-	//FieldFromUint32Buf(&point->y.bytes[0], point->y.length, &tmp.y);
 	while (n > 0)
 	{
 		PointTwice(&tmp, &tmp2);
+		FreePoint(&tmp);
 		PointCopy(&tmp2, &tmp);
-		//FieldFromUint32Buf(&res->x.bytes[0], res->x.length, &tmp.x);
-		//FieldFromUint32Buf(&res->y.bytes[0], res->y.length, &tmp.y);
+		FreePoint(&tmp2);
 		n--;
 	}
 	PointCopy(&tmp, res);
+	FreePoint(&tmp);
+}
+
+void FreePoint(point_t * point) {
+	FreeField(&point->x);
+	FreeField(&point->y);
 }
 
 void PointTwicePlus(point_t * thispoint, point_t * thatpoint, point_t * res) {
-	point_t thistmp, thattmp, tmp, tmpres;
+	point_t thistmp;
+	point_t thattmp;
+	point_t tmp;
+	point_t tmpres;
 	PointCopy(thispoint, &thistmp);
 	PointCopy(thatpoint, &thattmp);
-	PointCopy(thatpoint, &tmp);
-	//FieldFromUint32Buf(&thispoint->x.bytes[0], thispoint->x.length, &thistmp.x);
-	//FieldFromUint32Buf(&thispoint->y.bytes[0], thispoint->y.length, &thistmp.y);
-	//FieldFromUint32Buf(&thatpoint->x.bytes[0], thispoint->x.length, &thattmp.x);
-	//FieldFromUint32Buf(&thatpoint->y.bytes[0], thispoint->y.length, &thattmp.y);
 	PointTwice(&thistmp, &tmp);
 	PointAdd(&tmp, &thattmp, &tmpres);
 	PointCopy(&tmpres, res);
-	//free(tmp);
+	FreePoint(&thistmp);
+	FreePoint(&thattmp);
+	FreePoint(&tmp);
+	FreePoint(&tmpres);
 }
 
-void PointMulPos(point_t * point, field_t * big_k, point_t * res) {
-	//PrintDebugUInt32Array(&big_k->bytes[0], big_k->length);
+static uint32_t PointMulPosTimes = 0;
+
+void PointMulPos_Stage2_Loop(int32_t wi, point_t * basepoint, point_t * res) {
+	point_t r;
+	point_t tmp2;
+	precomp_t * table = malloc(sizeof(precomp_t) * 8);
+	int32_t digit = wi >> 16;
+	int zeroes = wi & 0xFFFF;
+
+	int32_t n = abs(digit);
+	if (digit < 0) {
+		table = &PreComputedPoints.neg[0];
+	} else {
+		table = &PreComputedPoints.pos[0];
+	}
+
+	FieldFromUint32Buf(&table[n >> 1].x[0], 9, &r.x);
+	FieldFromUint32Buf(&table[n >> 1].y[0], 9, &r.y);
+
+	point_t tmp;
+	PointTwicePlus(res, &r, &tmp);
+	PointTimesPow2(&tmp, zeroes, &tmp2);
+	PrintDebugUInt32Array(&tmp2.x.bytes[0], tmp2.x.length);
+	PrintDebugUInt32Array(&tmp2.y.bytes[0], tmp2.y.length);
+	FreePoint(res);
+	PointCopy(&tmp2, res);
+	free(table);
+	FreePoint(&r);
+	FreePoint(&tmp2);
+	FreePoint(&tmp);
+	//free(tmp2);
+}
+
+static int32_t resarr[50];
+
+void PointMulPos_Stage2(point_t * basepoint, field_t * big_k, point_t * stage1res, point_t * res) {
+
+	
+	while (PointMulPosTimes > 0)
+	{
+		PointMulPos_Stage2_Loop(resarr[--PointMulPosTimes], basepoint, stage1res);
+		if (PointMulPosTimes == 42) break;
+	}
+	PointCopy(stage1res, res);
+
+}
+
+void PointMulPos_Stage1(point_t * point, field_t * big_k, point_t * res) {
 	uint32_t bigkbl = FieldBitLength(big_k);
 	uint32_t width = getWindowSize(bigkbl);
 	width = width < 16 ?
 	(width > 2 ? width : 16) : 2;
-	//size_t resarrsize = floor(bigkbl / width + 1);
-	point_t newpoint;
-	int32_t resarr[50];
-	PointCopy(point, &newpoint);
-	//int32_t * tmp = malloc(sizeof(int32_t) * 60);
-	//PrintDebugUInt32Array(&big_k->bytes[0], big_k->length);
-	uint32_t wnafsize = windowNaf(width, big_k, resarr);
-	uint32_t asd = windowNaf(width, big_k, resarr);
-	//wnafsize = tmpwnafsize;
-	
-	//wnafsize--;
-	//memcpy(&resarr[0], &tmp[0], sizeof(int32_t) * tmpwnafsize);
-	//wnafsize--;
-	//free(tmp);
+
+	PointMulPosTimes = windowNaf(width, big_k, resarr);
+
 	point_t R;
-	point_t R2;
-	int zeroes = 0;
-	if (asd > 1) {
-		int32_t wi = resarr[--asd];
-		int digit = wi >> 16;
-		zeroes = wi & 0xFFFF;
-		int n = abs(digit);
-		point_precomputed_t table[8];
-		if (digit < 0) {
-			memcpy(&table, newpoint.precomp_neg, sizeof(point_precomputed_t) * 8);
+
+	int32_t wi = resarr[--PointMulPosTimes];
+	int digit = wi >> 16;
+	int zeroes = wi & 0xFFFF;
+
+	precomp_t * table = malloc(sizeof(precomp_t) * 8);
+	if (digit < 0) {
+		table = &PreComputedPoints.neg[0];
 		} else {
-			memcpy(&table, newpoint.precomp_pos, sizeof(point_precomputed_t) * 8);
-		}
+		table = &PreComputedPoints.pos[0];
+	}
+
+	if (PointMulPosTimes > 1) {
+		int n = abs(digit);
 		if ((n << 2) < (1 << width)) {
 			size_t highest = bitLengths[n];
 			size_t scale = width - highest;
@@ -236,66 +291,27 @@ void PointMulPos(point_t * point, field_t * big_k, point_t * res) {
 			size_t i2 = (lowBits << scale) + 1;
 			point_t tablei1;
 			point_t tablei2;
-			FieldFromUint32Buf(table[i1 >> 1].x.bytes, table[i1 >> 1].x.length, &tablei1.x);
-			FieldFromUint32Buf(table[i1 >> 1].y.bytes, table[i1 >> 1].y.length, &tablei1.y);
-			FieldFromUint32Buf(table[i2 >> 1].x.bytes, table[i2 >> 1].x.length, &tablei2.x);
-			FieldFromUint32Buf(table[i2 >> 1].y.bytes, table[i2 >> 1].y.length, &tablei2.y);
+			FieldFromUint32Buf(&table[i1 >> 1].x[0], 9, &tablei1.x);
+			FieldFromUint32Buf(&table[i1 >> 1].y[0], 9, &tablei1.y);
+			FieldFromUint32Buf(&table[i2 >> 1].x[0], 9, &tablei2.x);
+			FieldFromUint32Buf(&table[i2 >> 1].y[0], 9, &tablei2.y);
 			PointAdd(&tablei1, &tablei2, &R);
 			zeroes -= scale;
+			FreePoint(&tablei1);
+			FreePoint(&tablei2);
 		} else
         {
-			memcpy(&R.x, &table[(n >> 1)].x, sizeof(field_t));
-			memcpy(&R.y, &table[(n >> 1)].y, sizeof(field_t));
+			FieldFromUint32Buf(&table[n >> 1].x[0], 9, &R.x);
+			FieldFromUint32Buf(&table[n >> 1].x[0], 9, &R.y);
         }
 
-		//PrintDebugUInt32Array(&R.x.bytes[0], R.x.length);
-		//PrintDebugUInt32Array(&R.y.bytes[0], R.y.length);
-		PointTimesPow2(&R, zeroes, &R2);
-		//PrintDebugUInt32Array(&R2.x.bytes[0], R2.x.length);
-		//PrintDebugUInt32Array(&R2.y.bytes[0], R2.y.length);
-		//PointCopy(&tmp, &R);
+		PointTimesPow2(&R, zeroes, res);
+		FreePoint(&R);
+		free(table);
 	}
 
-	//int32_t wi = 0;
-	//int digit = 0;
-	//int n = 0;
-	//point_precomputed_t * table = malloc(sizeof(point_precomputed_t) * 8);
-	//point_t r;
-	while (asd > 0)
-	{
-		point_t r;
-		point_precomputed_t table[8];
-		int32_t wi = resarr[--asd];
-		int32_t digit = wi >> 16;
-		zeroes = wi & 0xFFFF;
-
-		int32_t n = abs(digit);
-		if (digit < 0) {
-			memcpy(&table, &newpoint.precomp_neg[0], sizeof(point_precomputed_t) * 8);
-			} else {
-			memcpy(&table, &newpoint.precomp_pos[0], sizeof(point_precomputed_t) * 8);
-		}
-
-		FieldFromUint32Buf(&table[n >> 1].x.bytes[0], 9, &r.x);
-		FieldFromUint32Buf(&table[n >> 1].y.bytes[0], 9, &r.y);
-		//PrintDebugUInt32Array(&r.x.bytes[0], r.x.length);
-		//PrintDebugUInt32Array(&r.y.bytes[0], r.y.length);
-		//PrintDebugUInt32Array(&R2.x.bytes[0], R2.x.length);
-		//PrintDebugUInt32Array(&R2.y.bytes[0], R2.y.length);
-		point_t tmp;
-		PointTwicePlus(&R2, &r, &tmp);
-		//PrintDebugUInt32Array(&tmp.x.bytes[0], tmp.x.length);
-		//PrintDebugUInt32Array(&tmp.y.bytes[0], tmp.y.length);
-		point_t tmp2;
-		PointTimesPow2(&tmp, zeroes, &tmp2);
-		PrintDebugUInt32Array(&tmp2.x.bytes[0], tmp2.x.length);
-		PrintDebugUInt32Array(&tmp2.y.bytes[0], tmp2.y.length);
-		PointCopy(&tmp2, res);
-	}
-
-	//return R;
 }
 
 bool PointEquals(point_t * p1, point_t * p2) {
-	return (&p1->x == &p2->x && &p1->y == &p2->y);
+	return (FieldEquals(&p1->x, &p2->x) && FieldEquals(&p1->y, &p2->y));
 }

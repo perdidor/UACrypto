@@ -52,8 +52,8 @@ int main(void)
 	//ADC_Init();
 	//PRNG_Init();
 	SignHash(hashe);
-	uint8_t * as = InvertByteArray(ss, 54);
-	PrintDebugByteArray(as, 55);
+	//uint8_t * as = InvertByteArray(ss, 54);
+	//PrintDebugByteArray(as, 55);
 	//ADC_Enable();
 	//uint16_t qwe = ADC_GetEntropy();
 	//char * buff2 = malloc(64);

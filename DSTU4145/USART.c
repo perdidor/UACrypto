@@ -68,9 +68,9 @@ void PrintDebugUInt32Array(uint32_t * arr, uint32_t arrlen)
 	for (int a = 0; a < arrlen; a++){
 		uint32_t asdasd = 0;
 		memcpy(&asdasd, &arr[a], sizeof(uint32_t));
-		sprintf(buff, " %lu,", asdasd);
-		EXT_CRLF();
-		//EXT_UART_Transmit(buff);
+		sprintf(buff, " %lu,\r\n", asdasd);
+		//EXT_CRLF();
+		EXT_UART_Transmit(buff);
 	}
 	//sprintf(buff, " %d }", arr[arrlen - 1]);
 	//EXT_UART_Transmit(buff);

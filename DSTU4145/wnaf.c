@@ -70,6 +70,7 @@ uint32_t windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
 	//}
 
 	return length;
+	FreeField(&f);
 }
 
 uint32_t getWindowSize(uint32_t bits) {
