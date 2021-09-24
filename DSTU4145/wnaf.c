@@ -22,7 +22,7 @@
 
 uint32_t DEFAULT_CUTOFFS[] = { 13, 41, 121, 337, 897, 2305 };
 
-uint32_t windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
+int windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
 	field_t f;
 	FieldClone(field, &f);
 	uint32_t f_len = FieldBitLength(&f);

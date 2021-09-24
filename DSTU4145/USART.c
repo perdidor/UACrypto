@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 #include "USART.h"
 
@@ -60,11 +61,26 @@ void EXT_UART_TransmitRawData(uint8_t * outarr, size_t arrlen) {
 	}
 }
 
-void PrintDebugUInt32Array(uint32_t * arr, uint32_t arrlen)
+void delay_1ms(uint16_t ms) {
+	volatile uint16_t i,foo = 0;
+	for(i=0;i<ms;i++)
+	{
+		_delay_ms(1);
+		//make some "work" to avoid optimization
+		foo++;
+	}
+	foo = 0;
+}
+
+void PrintDebugUInt32Array(uint32_t * arr, uint32_t arrlen, int passnum)
 {
 	char buff[32];
-	//sprintf(buff, "UInt32 Bytes: %d\r\n: {", arrlen);
-	//EXT_UART_Transmit(buff);
+	if (passnum >= 0)
+	{
+	
+		sprintf(buff, "MultPos rounds left: %d\r\n", passnum);
+		EXT_UART_Transmit(buff);
+	}
 	for (int a = 0; a < arrlen; a++){
 		uint32_t asdasd = 0;
 		memcpy(&asdasd, &arr[a], sizeof(uint32_t));

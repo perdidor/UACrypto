@@ -5,18 +5,27 @@
  *  Author: root
  */ 
 
+
+#define F_CPU	8000000UL
+
 #include <stdbool.h>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
+#include <avr/io.h>
+#include <util/atomic.h>
+#include <avr/interrupt.h>
+#include <string.h>
 #include "dstu_types.h"
 #include "PrivateKey.h"
 #include "Field.h"
 #include "Point.h"
 #include "bnops.h"
 #include "USART.h"
+
 
 
 uint32_t Priv_param_d[8] = { 2082397019, 1468370442, 823178231, 2862269997, 2052372100, 4252500519, 3735157276, 574723566 };
@@ -39,7 +48,7 @@ uint32_t Curve_field_zero[1] = { 0 };
 uint32_t Curve_basepoint_field_x[18] = { 3637645239, 883550428, 454084131, 2059702730, 812416512, 1439507979, 2098109292, 707391264, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint32_t Curve_basepoint_field_y[9] = { 1457001711, 2339384561, 2849377175, 3867225235, 4003475714, 2681009880, 4148483140, 109499423, 1 };
 
-uint32_t erand_bytes[9] = { 1735584209, 2323882957, 2410426351, 2233797261, 3727886745, 4055813777, 2664048444, 2043138973, 0 };
+uint32_t erand_bytes[9] = { 3664937398, 1653150529, 2808328673, 2317406940, 1733758146, 1812339012, 1127984026, 4253689913, 0 };
 
 precomp_set_t PreComputedPoints = { 
 	{
@@ -85,8 +94,9 @@ uint8_t * ArrayAddZero(uint8_t * array, uint8_t len, bool reorder) {
 void SignHash(uint8_t * hashvalue) {
 	field_t hash_v;
 	field_t rand_e;
+	int cnt = 0;
 
-	field_t r;
+	//field_t r;
 	uint8_t * withzero = ArrayAddZero(hashvalue, 32, true);
 	FieldFromByteArray(withzero, 33, 9, &hash_v);
 
@@ -97,15 +107,23 @@ void SignHash(uint8_t * hashvalue) {
 	FieldFromUint32Buf(Curve_basepoint_field_x, 18, &basepoint.x);
 	FieldFromUint32Buf(Curve_basepoint_field_y, 9, &basepoint.y);
 	//int ccc = 0;
-	field_t r2;
-	point_t r3;
+	//field_t r2;
+	//point_t r3;
+	//point_t eG3;
 	while (1) {
 		point_t eG1;
 		point_t eG2;
+		char buff[32];
+		cnt++;
 		PointMulPos_Stage1(&basepoint, &rand_e, &eG1);
-		PointMulPos_Stage2(&basepoint, &rand_e, &eG1, &eG2);
-		FreePoint(&eG1);
-		FreePoint(&eG2);
+		PointMulPos_Stage2(&rand_e, &eG1, &eG2);
+		sprintf(buff, "==== PASS %d ====\r\n", cnt);
+		EXT_UART_Transmit(buff);
+		EXT_UART_Transmit("X coord value:\r\n");
+		PrintDebugUInt32Array(&eG2.x.bytes[0], eG2.x.length, -1);
+		EXT_UART_Transmit("X coord value:\r\n");
+		PrintDebugUInt32Array(&eG2.y.bytes[0], eG2.y.length, -1);
+
 	}
 	//PointMulPos(&basepoint, &rand_e, &eG);
 	//FieldMod_Mul(&hash_v, &eG.x, &r);

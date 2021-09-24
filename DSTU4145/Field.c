@@ -26,7 +26,8 @@
 #include <stdbool.h>
 
 void FieldFromCurve(field_t * newfield) {
-	newfield->bytes = malloc(Priv_mod_words * sizeof(uint32_t));
+	PORTD ^= 0x40;
+	memset(newfield->bytes, 0x00, 22 * sizeof(uint32_t));
 	newfield->length = Priv_mod_words;
 	newfield->_is_field = true;
 }
@@ -37,9 +38,10 @@ void FieldFromHexStr(char * in_value, field_t * newfield) {
 }
 
 void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t * res) {
+	PORTD ^= 0x40;
 	size_t tmpsize = ceil(len / 4);
 	tmpsize = (tmpsize > max_size ? tmpsize : max_size);
-	res->bytes = malloc(sizeof(uint32_t) * tmpsize);
+	memset(res->bytes, 0x00, 32 * sizeof(uint32_t));
 	uint32_t code = 0;
 	uint32_t bpos = 0;
 	uint32_t vidx = 0;
@@ -61,28 +63,28 @@ void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t
 }
 
 void FreeField(field_t * field) {
-	free(field->bytes);
+	//free(field->bytes);
+	memset(field->bytes, 0x00, 22 * sizeof(uint32_t));
 	field->length = 0;
 }
 
 void FieldFromUint32Buf(uint32_t * in_value, int len, field_t * res) {
+	PORTD ^= 0x40;
 	res->length = len;
-	res->bytes = malloc(res->length * sizeof(uint32_t));
-	for (int i = 0; i < res->length; i++)
-	{
-		res->bytes[i] = in_value[i];
-	}
+	memset(&res->bytes[0], 0x00, 2 * sizeof(uint32_t));
+	memcpy(&res->bytes[0], &in_value[0], res->length * sizeof(uint32_t));
 	res->_is_field = true;
 }
 
+uint32_t FieldMod_Mul_s2[9] = { 0,0,0,0,0,0,0,0,0 };
+
 void FieldMod_Mul(field_t * thisfield, field_t * thatfield, field_t * res) {
+	PORTD ^= 0x40;
 	uint32_t s[22];
 	memcpy(&s[0], &Curve_mod_tmp[0], sizeof(uint32_t) * 22);
 	g2fmfmul(thisfield->bytes, thisfield->length, thatfield->bytes, thatfield->length, s, 22);
-	uint32_t * s2 = malloc(Priv_mod_words * sizeof(uint32_t));
-	g2fmffmod(s, 22, Priv_mod_bits, 3, s2);
-	FieldFromUint32Buf(s2, Priv_mod_words, res);
-	free(s2);
+	g2fmffmod(s, 22, Priv_mod_bits, 3, FieldMod_Mul_s2);
+	FieldFromUint32Buf(FieldMod_Mul_s2, Priv_mod_words, res);
 }
 
 void FieldMod_Sqr(field_t * thisfield, field_t * res) {
@@ -90,9 +92,10 @@ void FieldMod_Sqr(field_t * thisfield, field_t * res) {
 }
 
 void FieldAddM(field_t * thisfield, field_t * thatfield, uint32_t * _from, int fromlen) {
-	uint32_t that_b[thatfield->length];
-	uint32_t this_b[(fromlen > 0) ? fromlen : thisfield->length];
-	uint32_t to_b[thisfield->length];
+	PORTD ^= 0x40;
+	uint32_t that_b[20];
+	uint32_t this_b[20];
+	uint32_t to_b[20];
 	memcpy(&that_b, thatfield->bytes, thatfield->length * sizeof(uint32_t));
 	if (fromlen > 0) {
 		for (int i = 0; i < fromlen; i++)
@@ -113,10 +116,8 @@ void FieldAddM(field_t * thisfield, field_t * thatfield, uint32_t * _from, int f
 	thatlen;
 
 	if (to_b_len < thatlen) {
-		uint32_t * tmpto_b = malloc(Priv_mod_words * 4);
-		memcpy(&to_b, &tmpto_b, Priv_mod_words * 4);
-		to_b_len = Priv_mod_words;
-		free(tmpto_b);
+		memset(&to_b, 0x00, thisfield->length * 4);
+		to_b_len = thisfield->length;
 	}
 	for(uint8_t i = 0; i < iter_len; i++) {
 		to_b[i] = this_b[i] ^ ((i <= thatfield->length - 1) ? that_b[i] : 0);
@@ -127,11 +128,13 @@ void FieldAddM(field_t * thisfield, field_t * thatfield, uint32_t * _from, int f
 }
 
 void FieldAdd(field_t * thisfield, field_t * thatfield, field_t * res) {
+	PORTD ^= 0x40;
 	FieldFromCurve(res);
 	FieldAddM(res, thatfield, thisfield->bytes, thisfield->length);
 }
 
 bool FieldIs_Zero(field_t * field) {
+	PORTD ^= 0x40;
 	int blen = field->length;
 	bool res = true;
 	for(int idx = 0; idx < blen; idx++)
@@ -142,6 +145,7 @@ bool FieldIs_Zero(field_t * field) {
 }
 
 bool FieldEquals(field_t * thisfield, field_t * thatfield) {
+	PORTD ^= 0x40;
 	int blen = thisfield->length;
 	int olen = thatfield->length;
 	bool res = true;
@@ -159,6 +163,7 @@ bool FieldEquals(field_t * thisfield, field_t * thatfield) {
 }
 
 bool FieldIs_Less(field_t * thisfield, field_t * thatfield) {
+	PORTD ^= 0x40;
 	int blen = thisfield->length;
 	int olen = thatfield->length;
 	while(thatfield->bytes[olen - 1] == 0) olen--;
@@ -171,10 +176,12 @@ bool FieldIs_Less(field_t * thisfield, field_t * thatfield) {
 }
 
 uint32_t FieldBitLength(field_t * field) {
+	PORTD ^= 0x40;
 	return g2fmblength(&field->bytes[0], field->length);
 }
 
 bool FieldTestBit(uint32_t n, field_t * field) {
+	PORTD ^= 0x40;
 	int test_word = floor(n / 32);
 	int test_bit = n % 32;
 	if (test_word < 0 || test_word > field->length) {
@@ -187,10 +194,12 @@ bool FieldTestBit(uint32_t n, field_t * field) {
 }
 
 void FieldClone(field_t * thatfield, field_t * res) {
+	PORTD ^= 0x40;
 	FieldFromUint32Buf(thatfield->bytes, thatfield->length, res);
 }
 
 void FieldClearBit(field_t * field, uint32_t n) {
+	PORTD ^= 0x40;
 	int test_word = floor(n / 32);
 	int test_bit = n % 32;
 	int mask = 1 << test_bit;
@@ -203,6 +212,7 @@ void FieldClearBit(field_t * field, uint32_t n) {
 }
 
 void FieldSetBit(field_t * field, uint32_t n) {
+	PORTD ^= 0x40;
 	int test_word = floor(n / 32);
 	int test_bit = n % 32;
 	int mask = 1 << test_bit;
@@ -214,43 +224,46 @@ void FieldSetBit(field_t * field, uint32_t n) {
 }
 
 void FieldShiftRight(field_t * field, uint32_t n, field_t * res) {
+	PORTD ^= 0x40;
 	if (n == 0) FieldClone(field, res);
 	g2fmshiftRight(field->bytes, field->length, n);
 	FieldFromUint32Buf(field->bytes, field->length, res);
 }
 
 void FieldShiftRightM(field_t * field, uint32_t n) {
+	PORTD ^= 0x40;
 	if (n == 0) return;
 	g2fmshiftRight(field->bytes, field->length, n);
 }
 
-uint8_t * FieldBuf8(field_t * field) {
-	uint8_t * ret = malloc(field->length * 4);
-	size_t len = field->length * sizeof(uint8_t);
-
-	for (uint8_t idx = 0; idx < field->length; idx++) {
-		ret[len - idx * sizeof(uint8_t) - 1] = field->bytes[idx] & 0xFF;
-		ret[len - idx * sizeof(uint8_t) - 2] = field->bytes[idx] >> 8 & 0xFF;
-		ret[len - idx * sizeof(uint8_t) - 3] = field->bytes[idx] >> 16 & 0xFF;
-		ret[len - idx * sizeof(uint8_t) - 4] = field->bytes[idx] >> 24 & 0xFF;
-	}
-	return ret;
-}
-
-uint8_t * FieldTruncate_Buf8(field_t * field) {
-	uint8_t * ret = FieldBuf8(field);
-	size_t start = field->length * 4 - g2fmblength(Curve_field_order, 17);
-	if(start < 0) {
-		return ret;
-	}
-	size_t newretlen = field->length * 4 - start;
-	uint8_t * newret = malloc(newretlen);
-	memcpy(newret, &ret[start], newretlen);
-	free(ret);
-	return newret;
-}
+//uint8_t * FieldBuf8(field_t * field) {
+	//uint8_t * ret = malloc(field->length * 4);
+	//size_t len = field->length * sizeof(uint8_t);
+//
+	//for (uint8_t idx = 0; idx < field->length; idx++) {
+		//ret[len - idx * sizeof(uint8_t) - 1] = field->bytes[idx] & 0xFF;
+		//ret[len - idx * sizeof(uint8_t) - 2] = field->bytes[idx] >> 8 & 0xFF;
+		//ret[len - idx * sizeof(uint8_t) - 3] = field->bytes[idx] >> 16 & 0xFF;
+		//ret[len - idx * sizeof(uint8_t) - 4] = field->bytes[idx] >> 24 & 0xFF;
+	//}
+	//return ret;
+//}
+//
+//uint8_t * FieldTruncate_Buf8(field_t * field) {
+	//uint8_t * ret = FieldBuf8(field);
+	//size_t start = field->length * 4 - g2fmblength(Curve_field_order, 17);
+	//if(start < 0) {
+		//return ret;
+	//}
+	//size_t newretlen = field->length * 4 - start;
+	//uint8_t * newret = malloc(newretlen);
+	//memcpy(newret, &ret[start], newretlen);
+	//free(ret);
+	//return newret;
+//}
 
 uint8_t FieldTrace(field_t * field) {
+	PORTD ^= 0x40;
 	uint32_t bitm_l = Curve_m;
 	field_t * rv = malloc(sizeof(field_t));
 	FieldClone(field, rv);
@@ -263,6 +276,7 @@ uint8_t FieldTrace(field_t * field) {
 }
 
 void FieldInvert(field_t * field, field_t * res) {
+	PORTD ^= 0x40;
 	uint32_t p[9];
 	uint32_t a[10];
 	uint32_t tmpres[10];
@@ -273,6 +287,7 @@ void FieldInvert(field_t * field, field_t * res) {
 }
 
 void FieldTruncate(field_t * field, field_t * res) {
+	PORTD ^= 0x40;
 	field_t tmporderfield;
 	FieldFromUint32Buf(Curve_field_order, 17, &tmporderfield);
 	uint32_t bitl_o = FieldBitLength(&tmporderfield);
@@ -286,6 +301,7 @@ void FieldTruncate(field_t * field, field_t * res) {
 }
 
 void FieldCreateRandom(field_t * res) {
+	PORTD ^= 0x40;
 	field_t * tmpf = malloc(sizeof(field_t));
 	FieldFromUint32Buf(Curve_field_order, 17, tmpf);
 	size_t bits = FieldBitLength(tmpf);
@@ -310,6 +326,7 @@ void FieldCreateRandom(field_t * res) {
 }
 
 field_t * FieldCompress(point_t * point) {
+	PORTD ^= 0x40;
 	field_t * x_inv = malloc(sizeof(field_t));
 	FieldInvert(&point->x, x_inv);
 	field_t * tmp = malloc(sizeof(field_t));

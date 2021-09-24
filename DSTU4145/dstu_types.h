@@ -29,7 +29,7 @@ typedef enum {
 typedef struct {
 	bool _is_field;
 	int length;
-	uint32_t * bytes;
+	uint32_t bytes[22];
 } field_t;
 
 typedef struct {
@@ -40,9 +40,6 @@ typedef struct {
 typedef struct {
 	field_t x;
 	field_t y;
-	//point_precomputed_t twice_point;
-	//point_precomputed_t precomp_neg[8];
-	//point_precomputed_t precomp_pos[8];
 } point_t;
 
 typedef struct {
