@@ -31,7 +31,7 @@ int main(void)
     while (1) 
     {
 		PORTD ^= 0x40;
-		//_delay_ms(500);
+		_delay_ms(500);
     }
 }
 

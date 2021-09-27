@@ -6,7 +6,7 @@
  */ 
 
 
-#define F_CPU	8000000UL
+#define F_CPU	16000000UL
 
 #include <stdbool.h>
 #include <inttypes.h>
@@ -25,10 +25,13 @@
 #include "Point.h"
 #include "bnops.h"
 #include "USART.h"
+#include "PRNG.h"
 
 
 
 uint32_t Priv_param_d[8] = { 2082397019, 1468370442, 823178231, 2862269997, 2052372100, 4252500519, 3735157276, 574723566 };
+uint32_t bigdwords[11] = { 2022235, 23298719, 54490488, 11846722, 11180742, 43330977, 58729079, 65565685, 32431777, 561253, 0 };
+uint32_t bigorderwords[23] = { 8210189, 6145316, 43547966, 15451659, 6773025, 0, 0, 0, 0, 2097152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint32_t Priv_mod_bits[3] = { 257, 12, 0 };
 uint8_t Priv_mod_words = 9;
 uint8_t Priv_sbox[64] = { 169, 214, 235, 69, 241, 60, 112, 130, 128, 196, 150, 123, 35, 31, 94, 173, 246, 88, 235, 164, 192, 55, 41, 29, 56, 217, 107, 240, 37, 202, 78, 23, 248, 233, 114, 13, 198, 21, 180, 58, 40, 151, 95, 11, 193, 222, 163, 100, 56, 181, 100, 234, 44, 23, 159, 208, 18, 62, 109, 184, 250, 197, 121, 4 };
@@ -47,8 +50,6 @@ uint32_t Curve_field_order[17] = { 2424129293, 3554768660, 4051888519, 173389445
 uint32_t Curve_field_zero[1] = { 0 };
 uint32_t Curve_basepoint_field_x[18] = { 3637645239, 883550428, 454084131, 2059702730, 812416512, 1439507979, 2098109292, 707391264, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint32_t Curve_basepoint_field_y[9] = { 1457001711, 2339384561, 2849377175, 3867225235, 4003475714, 2681009880, 4148483140, 109499423, 1 };
-
-uint32_t erand_bytes[9] = { 3664937398, 1653150529, 2808328673, 2317406940, 1733758146, 1812339012, 1127984026, 4253689913, 0 };
 
 precomp_set_t PreComputedPoints = { 
 	{
@@ -73,9 +74,13 @@ precomp_set_t PreComputedPoints = {
 	} 
 };
 
-uint8_t * ArrayAddZero(uint8_t * array, uint8_t len, bool reorder) {
+uint32_t sssss[9] = { 3252810829, 1647146478, 1826671127, 1278504361, 1259005204, 2046778452, 2015858012, 1366928916, 0 };
+
+//uint32_t erand_bytes[9] = { 3664937398, 1653150529, 2808328673, 2317406940, 1733758146, 1812339012, 1127984026, 4253689913, 0 };
+uint32_t erand_bytes[9] = { 3815796871, 2073761387, 35138959, 1903234609, 384505738, 3967447698, 3055808598, 3373911301, 0 };
+
+void ArrayAddZero(uint8_t * array, uint8_t len, bool reorder, uint8_t * res) {
 	uint8_t newdatalen = len + 1;
-	uint8_t * res = malloc(newdatalen);
 	int index = 0;
 	if (!reorder) {
 		res[index] = 0;
@@ -88,60 +93,95 @@ uint8_t * ArrayAddZero(uint8_t * array, uint8_t len, bool reorder) {
 		res[index] = array[(reorder) ? (len - index) : (index - 1)];
 		index++;
 	}
-	return res;
 }
 
 void SignHash(uint8_t * hashvalue) {
 	field_t hash_v;
-	field_t rand_e;
 	int cnt = 0;
 
-	//field_t r;
-	uint8_t * withzero = ArrayAddZero(hashvalue, 32, true);
+	uint8_t withzero[33];
+	ArrayAddZero(hashvalue, 32, true, withzero);
 	FieldFromByteArray(withzero, 33, 9, &hash_v);
-
-	FieldFromUint32Buf(erand_bytes, 9, &rand_e);
 
 	point_t basepoint;
 
 	FieldFromUint32Buf(Curve_basepoint_field_x, 18, &basepoint.x);
 	FieldFromUint32Buf(Curve_basepoint_field_y, 9, &basepoint.y);
-	//int ccc = 0;
-	//field_t r2;
-	//point_t r3;
-	//point_t eG3;
+
+	char buff[32];
 	while (1) {
 		point_t eG1;
 		point_t eG2;
-		char buff[32];
+		field_t r;
+		field_t r2;
+		//field_t randE;
+		field_t curve_order;
+		field_t paramd;
+
+		bignumber_t R;
+		bignumber_t R2;
+		bignumber_t BigD;
+		bignumber_t BigRandE;
+		bignumber_t BigOrder;
+		bignumber_t BigS;
+		bignumber_t BigS2;
+		bignumber_t BigS3;
+		
+		uint8_t buff8[128];
+		uint8_t signatureS[32];
+		uint8_t signatureR[32];
 		cnt++;
+		
+		field_t rand_e;
+		
+		//FieldCreateRandom(&rand_e);
+		FieldFromUint32Buf(erand_bytes, 9, &rand_e);
+		//rand_e.length = 9;
+		//for (int i = 0; i < 8; i++)
+		//{
+			//rand_e.bytes[i] = (uint32_t)rand();
+		//}
+		
 		PointMulPos_Stage1(&basepoint, &rand_e, &eG1);
 		PointMulPos_Stage2(&rand_e, &eG1, &eG2);
 		sprintf(buff, "==== PASS %d ====\r\n", cnt);
 		EXT_UART_Transmit(buff);
+		EXT_UART_Transmit("random field value:\r\n");
+		PrintDebugUInt32Array(rand_e.bytes, 9, -1);
 		EXT_UART_Transmit("X coord value:\r\n");
 		PrintDebugUInt32Array(&eG2.x.bytes[0], eG2.x.length, -1);
-		EXT_UART_Transmit("X coord value:\r\n");
+		EXT_UART_Transmit("Y coord value:\r\n");
 		PrintDebugUInt32Array(&eG2.y.bytes[0], eG2.y.length, -1);
-
+		FieldMod_Mul(&hash_v, &eG2.x, &r);
+		FieldTruncate(&r, &r2);
+		EXT_UART_Transmit("r field value:\r\n");
+		PrintDebugUInt32Array(&r2.bytes[0], r2.length, -1);
+		
+		//FieldFromUint32Buf(erand_bytes, 9, &randE);
+		FieldFromUint32Buf(Priv_param_d, 8, &paramd);
+		FieldFromUint32Buf(Curve_field_order, 17, &curve_order);
+		int r2buffsize = FieldBuf8(&r2, buff8);
+		BNFromUint8Buf(buff8, r2buffsize, &R);
+		int erandbuffsize = FieldBuf8(&rand_e, buff8);
+		BNFromUint8Buf(buff8, erandbuffsize, &BigRandE);
+		int paramdbuffsize = FieldBuf8(&paramd, buff8);
+		BNFromUint8Buf(buff8, paramdbuffsize, &BigD);
+		int orderbuffsize = FieldBuf8(&curve_order, buff8);
+		BNFromUint8Buf(buff8, orderbuffsize, &BigOrder);
+		BigOrder.Length = 10;
+		BNComb10MulTo(&BigD, &R, &R2);
+		BNWordDiv(&R2, &BigOrder, &BigS);
+		BNAdd(&BigS, &BigRandE, &BigS2);
+		BNFromUint8Buf(buff8, orderbuffsize, &BigOrder);
+		BigOrder.Length = 10;
+		BNWordDiv(&BigS2, &BigOrder, &BigS3);
+		EXT_UART_Transmit("signature UInt32 array value:\r\n");
+		PrintDebugUInt32Array(&BigS3.words[0], BigS3.Length, -1);
+		BNToBEUint8Array(&BigS3, signatureS);
+		BNToBEUint8Array(&R, signatureR);
+		EXT_UART_Transmit("signatureS value:\r\n");
+		PrintDebugByteArray(signatureS, 32);
+		EXT_UART_Transmit("signatureR value:\r\n");
+		PrintDebugByteArray(signatureR, 32);
 	}
-	//PointMulPos(&basepoint, &rand_e, &eG);
-	//FieldMod_Mul(&hash_v, &eG.x, &r);
-	//field_t r2;
-	//FieldTruncate(&r, &r2);
-	//bignumber_t R;
-	//BNFromField(&r2, &R);
-	//bignumber_t BigD;
-	//BNFromUInt32Buf(&Priv_param_d[0], 8, &R);
-	//bignumber_t BigRandE;
-	//BNFromField(&rand_e, &BigRandE);
-	//bignumber_t BigOrder;
-	//BNFromUInt32Buf(&Curve_field_order[0], 17, &BigOrder);
-	//bignumber_t bn1;
-	//BNComb10MulTo(&BigD, &R, &bn1);
-	//divmodres_t s;
-	//BNDivMod(&bn1, &BigOrder, true, &s);
-	//bignumber_t sukka;
-	//BNAdd(s.mod, &BigRandE, &sukka);
-	//BNDivMod(&sukka, &BigOrder, true, &s);
 }

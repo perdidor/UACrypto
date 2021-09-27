@@ -8,7 +8,7 @@
 #define ADCOPS_H_
 
 #ifndef F_CPU
-#define F_CPU 8000000 // Clock Speed
+#define F_CPU 16000000UL // Clock Speed
 #endif
 
 #include <avr/io.h>

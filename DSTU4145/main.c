@@ -5,7 +5,7 @@
  * Author : root
  */ 
 
-#define F_CPU	8000000UL
+#define F_CPU	16000000UL
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -56,11 +56,10 @@ int main(void)
     while (1) 
     {
 		PORTD ^= 0x40;
-		//char * buff = malloc(64);
-		//sprintf(buff, "Hello #%d", cnt++);
-		//EXT_UART_Transmit(buff);
-		//EXT_CRLF();
-		//free(buff);
+		char buff[64];
+		sprintf(buff, "Hello #%d", cnt++);
+		EXT_UART_Transmit(buff);
+		EXT_CRLF();
 		delay_1ms(1000);
     }
 }

@@ -8,7 +8,7 @@
 #include "ADCops.h"
 
 uint8_t GetRandomByte() {
-	return rand() % 255 + 1;
+	return (uint8_t)(rand() & 0xff);
 }
 
 void PRNG_Init() {

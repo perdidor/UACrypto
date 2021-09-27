@@ -16,21 +16,21 @@
 #include "dstu_types.h"
 
 typedef struct {
-	uint32_t * words;
+	uint32_t words[32];
 	size_t Length;
 	bool Negative;
 } bignumber_t;
 
 typedef struct {
-	bignumber_t * div;
-	bignumber_t * mod;
+	bignumber_t div;
+	bignumber_t mod;
 } divmodres_t;
 
 void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t * res);
 void BNClone(bignumber_t * bn, bignumber_t * res);
 void BNiushln(bignumber_t * bn, size_t bits);
-void BNiushln(bignumber_t * bn, size_t bits);
-void BNishlnsubmul(bignumber_t * bn, bignumber_t * thatbn, size_t mul, size_t shift);
+void BNiushrn(bignumber_t * bn, size_t bits);
+void BNishlnsubmul(bignumber_t * bn, bignumber_t * thatbn, uint64_t mul, size_t shift);
 bool BNIsZero(bignumber_t * bn);
 uint32_t BNCountBits(uint32_t num);
 void BNWordDiv(bignumber_t * thisbn, bignumber_t * thatbn, bignumber_t * res);
@@ -41,6 +41,9 @@ void BNAdd(bignumber_t * thisnum, bignumber_t * thatnum, bignumber_t * res);
 void BNDivMod(bignumber_t * thisbn, bignumber_t * thatbn, bool positive, divmodres_t * res);
 void BNFromField(field_t * field, bignumber_t * res);
 void BNFromUInt32Buf(uint32_t * array, int datalen, bignumber_t * res);
+void BNStrip(bignumber_t * thisnum);
+void BNToBEUint8Array(bignumber_t * thisnum, uint8_t * res);
+void BNFromUint8Buf(uint8_t * array, size_t len, bignumber_t * res);
 
 
 

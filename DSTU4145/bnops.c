@@ -19,17 +19,46 @@
 #include "dstu_types.h"
 
 void BNFromField(field_t * field, bignumber_t * res) {
-	res->words = malloc(field->length * sizeof(uint32_t));
 	res->Negative = false;
 	res->Length = field->length;
 	memcpy(&res->words[0], &field->bytes[0], field->length * sizeof(uint32_t));
 }
 
 void BNFromUInt32Buf(uint32_t * array, int datalen, bignumber_t * res) {
-	res->words = malloc(datalen * sizeof(uint32_t));
 	res->Negative = false;
 	res->Length = datalen;
 	memcpy(&res->words[0], &array[0], datalen * sizeof(uint32_t));
+}
+
+void BNFromUint8Buf(uint8_t * array, size_t len, bignumber_t * res) {
+	uint8_t locarr[128];
+	memcpy(locarr, array, len);
+	res->Negative = false;
+	res->Length = 0;
+	for (int i = 0; i < 32; i++) {
+		res->words[i] = 0;
+	}
+	if (len <= 0) {
+		res->words[0] = 0;
+		res->Length = 1;
+		return;
+	}
+	
+	res->Length = ceil((size_t)(len / 3));
+	
+	int off = 0;
+	int i = len - 1;
+	int j = 0;
+	for (; i >= 0; i -= 3) {
+		//uint32_t w = ((locarr[i] | (locarr[i - 1] << 8)) | (locarr[i - 2] << 16));
+		res->words[j] |= (((((uint32_t)locarr[i] | ((uint32_t)((i >= 1) ? locarr[i - 1] : 0) << 8)) | ((uint32_t)((i >= 2) ? locarr[i - 2] : 0) << 16)) << off) & 0x3ffffff);
+		res->words[j + 1] = ((((uint32_t)locarr[i] | ((uint32_t)((i >= 1) ? locarr[i - 1] : 0) << 8)) | ((uint32_t)((i >= 2) ? locarr[i - 2] : 0) << 16)) >> (26 - off)) & 0x3ffffff;
+		off += 24;
+		if (off >= 26) {
+			off -= 26;
+			j++;
+		}
+	}
 }
 
 void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t * res) {
@@ -37,6 +66,8 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint64_t lo;
 	uint64_t mid;
 	uint64_t hi;
+	//uint32_t localarray[22];
+	//memcpy(localarray, firstnum->words, sizeof(uint32_t) * firstnum->Length);
 	uint32_t a0 = firstnum->words[0];
 	uint32_t al0 = a0 & 0x1fff;
 	uint32_t ah0 = a0 >> 13;
@@ -106,6 +137,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w0 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w0 >> 26));
 	w0 &= 0x3ffffff;
+	memcpy(&res->words[0], &w0, 4);
 	/* k = 1 */
 	lo = al1 * bl0;
 	mid = al1 * bh0;
@@ -118,6 +150,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w1 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w1 >> 26));
 	w1 &= 0x3ffffff;
+	memcpy(&res->words[1], &w1, 4);
 	/* k = 2 */
 	lo = al2 * bl0;
 	mid = al2 * bh0;
@@ -134,6 +167,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w2 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w2 >> 26));
 	w2 &= 0x3ffffff;
+	memcpy(&res->words[2], &w2, 4);
 	/* k = 3 */
 	lo = al3 * bl0;
 	mid = al3 * bh0;
@@ -154,6 +188,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w3 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w3 >> 26));
 	w3 &= 0x3ffffff;
+	memcpy(&res->words[3], &w3, 4);
 	/* k = 4 */
 	lo = al4 * bl0;
 	mid = al4 * bh0;
@@ -178,6 +213,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w4 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w4 >> 26));
 	w4 &= 0x3ffffff;
+	memcpy(&res->words[4], &w4, 4);
 	/* k = 5 */
 	lo = al5 * bl0;
 	mid = al5 * bh0;
@@ -206,6 +242,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w5 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w5 >> 26));
 	w5 &= 0x3ffffff;
+	memcpy(&res->words[5], &w5, 4);
 	/* k = 6 */
 	lo = al6 * bl0;
 	mid = al6 * bh0;
@@ -238,6 +275,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w6 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w6 >> 26));
 	w6 &= 0x3ffffff;
+	memcpy(&res->words[6], &w6, 4);
 	/* k = 7 */
 	lo = al7 * bl0;
 	mid = al7 * bh0;
@@ -274,6 +312,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w7 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w7 >> 26));
 	w7 &= 0x3ffffff;
+	memcpy(&res->words[7], &w7, 4);
 	/* k = 8 */
 	lo = al8 * bl0;
 	mid = al8 * bh0;
@@ -314,6 +353,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w8 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w8 >> 26));
 	w8 &= 0x3ffffff;
+	memcpy(&res->words[8], &w8, 4);
 	/* k = 9 */
 	lo = al9 * bl0;
 	mid = al9 * bh0;
@@ -358,6 +398,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w9 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w9 >> 26));
 	w9 &= 0x3ffffff;
+	memcpy(&res->words[9], &w9, 4);
 	/* k = 10 */
 	lo = al9 * bl1;
 	mid = al9 * bh1;
@@ -398,6 +439,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w10 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w10 >> 26));
 	w10 &= 0x3ffffff;
+	memcpy(&res->words[10], &w10, 4);
 	/* k = 11 */
 	lo = al9 * bl2;
 	mid = al9 * bh2;
@@ -434,6 +476,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w11 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w11 >> 26));
 	w11 &= 0x3ffffff;
+	memcpy(&res->words[11], &w11, 4);
 	/* k = 12 */
 	lo = al9 * bl3;
 	mid = al9 * bh3;
@@ -466,6 +509,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w12 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w12 >> 26));
 	w12 &= 0x3ffffff;
+	memcpy(&res->words[12], &w12, 4);
 	/* k = 13 */
 	lo = al9 * bl4;
 	mid = al9 * bh4;
@@ -494,6 +538,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w13 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w13 >> 26));
 	w13 &= 0x3ffffff;
+	memcpy(&res->words[13], &w13, 4);
 	/* k = 14 */
 	lo = al9 * bl5;
 	mid = al9 * bh5;
@@ -518,6 +563,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w14 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w14 >> 26));
 	w14 &= 0x3ffffff;
+	memcpy(&res->words[14], &w14, 4);
 	/* k = 15 */
 	lo = al9 * bl6;
 	mid = al9 * bh6;
@@ -538,6 +584,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w15 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w15 >> 26));
 	w15 &= 0x3ffffff;
+	memcpy(&res->words[15], &w15, 4);
 	/* k = 16 */
 	lo = al9 * bl7;
 	mid = al9 * bh7;
@@ -554,6 +601,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w16 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w16 >> 26));
 	w16 &= 0x3ffffff;
+	memcpy(&res->words[16], &w16, 4);
 	/* k = 17 */
 	lo = al9 * bl8;
 	mid = al9 * bh8;
@@ -566,6 +614,7 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w17 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w17 >> 26));
 	w17 &= 0x3ffffff;
+	memcpy(&res->words[17], &w17, 4);
 	/* k = 18 */
 	lo = al9 * bl9;
 	mid = al9 * bh9;
@@ -574,29 +623,10 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 	uint32_t w18 = (((c + lo)) + ((mid & 0x1fff) << 13));
 	c = (((hi + (mid >> 13))) + (w18 >> 26));
 	w18 &= 0x3ffffff;
-	res->words = malloc(sizeof(uint32_t) * 20);
+	memcpy(&res->words[18], &w18, 4);
 	res->Length = 19;
-	res->Negative = false;
-	res->words[0] = w0;
-	res->words[1] = w1;
-	res->words[2] = w2;
-	res->words[3] = w3;
-	res->words[4] = w4;
-	res->words[5] = w5;
-	res->words[6] = w6;
-	res->words[7] = w7;
-	res->words[8] = w8;
-	res->words[9] = w9;
-	res->words[10] = w10;
-	res->words[11] = w11;
-	res->words[12] = w12;
-	res->words[13] = w13;
-	res->words[14] = w14;
-	res->words[15] = w15;
-	res->words[16] = w16;
-	res->words[17] = w17;
-	res->words[18] = w18;
 	if (c != 0) {
+		memcpy(&res->words[19], &c, 4);
 		res->words[19] = c;
 		res->Length = 20;
 	}
@@ -605,7 +635,6 @@ void BNComb10MulTo(bignumber_t * firstnum, bignumber_t * secondnum, bignumber_t 
 void BNClone(bignumber_t * bn, bignumber_t * res) {
 	res->Length = bn->Length;
 	res->Negative = bn->Negative;
-	res->words = malloc(sizeof(uint32_t) * bn->Length);
 	memcpy(&res->words[0], &bn->words[0], sizeof(uint32_t) * bn->Length);
 }
 
@@ -631,7 +660,7 @@ uint32_t BNCountBits(uint32_t num) {
 	return r + t;
 }
 
-void BNiushln(bignumber_t * bn, size_t bits) {
+void BNiushrn(bignumber_t * bn, size_t bits) {
 	size_t r = bits % 26;
 	size_t h = 0;
 	size_t s = ((bits - r) / 26) < bn->Length ? ((bits - r) / 26) : bn->Length;
@@ -652,7 +681,8 @@ void BNiushln(bignumber_t * bn, size_t bits) {
 		}
 
 	uint32_t carry = 0;
-	for (size_t i = bn->Length - 1; i >= 0 && (carry != 0 || i >= h); i--) {
+	int i = (int)(bn->Length - 1);
+	for ( ;i >= 0 && (carry != 0 || i >= h); i--) {
 		uint32_t word = bn->words[i];
 		bn->words[i] = (carry << (26 - r)) | (word >> r);
 		carry = word & mask;
@@ -664,7 +694,7 @@ void BNiushln(bignumber_t * bn, size_t bits) {
 	}
 }
 
-void BNiushrn(bignumber_t * bn, size_t bits) {
+void BNiushln(bignumber_t * bn, size_t bits) {
 	size_t r = bits % 26;
 	size_t s = (bits - r) / 26;
 	uint32_t carryMask = (0x3ffffff >> (26 - r)) << (26 - r);
@@ -696,17 +726,19 @@ void BNiushrn(bignumber_t * bn, size_t bits) {
 	}
 }
 
-void BNishlnsubmul(bignumber_t * bn, bignumber_t * thatbn, size_t mul, size_t shift) {
-	uint32_t carry = 0;
-	uint32_t w = 0;
-	for (size_t i = 0; i < thatbn->Length; i++) {
-		w = (bn->words[i + shift]) + carry;
-		uint32_t right = (thatbn->words[i]) * mul;
+void BNishlnsubmul(bignumber_t * bn, bignumber_t * thatbn, uint64_t mul, size_t shift) {
+	int32_t carry = 0;
+	int32_t w = 0;
+	//int w2 = 0;
+	uint8_t i = 0;
+	for (; i < thatbn->Length; i++) {
+		w = ((i + shift <= bn->Length) ? (bn->words[i + shift]) : 0) + carry;
+		uint64_t right = (uint64_t)((thatbn->words[i]) * mul);
 		w -= right & 0x3ffffff;
-		carry = (w >> 26) - ((right / 0x4000000));
-		bn->words[i + shift] = w & 0x3ffffff;
+		carry = (w >> 26) - ((int32_t)(right / 67108864));
+		if (i + shift <= bn->Length) bn->words[i + shift] = w & 0x3ffffff;
 	}
-	for (size_t i = 0; i < bn->Length - shift; i++) {
+	for (; i < bn->Length - shift; i++) {
 		w = (bn->words[i + shift]) + carry;
 		carry = w >> 26;
 		bn->words[i + shift] = w & 0x3ffffff;
@@ -737,7 +769,7 @@ void BNWordDiv(bignumber_t * thisbn, bignumber_t * thatbn, bignumber_t * res) {
 		BNiushln(&a, shift);
 		bhi = thatbn->words[thatbn->Length - 1];
 	}
-	size_t m = a.Length - thatbn->Length;
+	int m = (int)(a.Length - thatbn->Length);
 	bignumber_t diff;
 	BNClone(&a, &diff);
 	BNishlnsubmul(&diff, thatbn, 1, m);
@@ -745,17 +777,20 @@ void BNWordDiv(bignumber_t * thisbn, bignumber_t * thatbn, bignumber_t * res) {
 		BNClone(&diff, &a);
 	}
 
-	for (size_t j = m - 1; j >= 0; j--) {
-		uint32_t qj = ((thatbn->Length + j < a.Length) ? a.words[thatbn->Length + j] : 0) * 0x4000000 +
-		((thatbn->Length + j < a.Length) ? a.words[thatbn->Length + j - 1] : 0);
+	for (int j = m - 1; j >= 0; j--) {
+		uint64_t awv = (uint64_t)a.words[thatbn->Length + j];
+		uint64_t awv2 = (uint64_t)a.words[thatbn->Length + j - 1];
+		uint64_t qjbhi = (uint64_t)(awv * 67108864 + awv2) / bhi;
+		//qj += a.words[thatbn->Length + j - 1];
+		//uint64_t qj = ((thatbn->Length + j < a.Length) ? a.words[thatbn->Length + j] : 0) * 67108864 + ((thatbn->Length + j < a.Length) ? a.words[thatbn->Length + j - 1] : 0);
 
 		// NOTE: (qj / bhi) is (0x3ffffff * 0x4000000 + 0x3ffffff) / 0x2000000 max
 		// (0x7ffffff)
-		qj = ((bhi == 0) ? 0 : (qj / bhi)) > 0x3ffffff ? 0x3ffffff : ((bhi == 0) ? 0 : (qj / bhi));
-		BNishlnsubmul(&a, thatbn, qj, j);
+		qjbhi = (qjbhi > 0x3ffffff) ? 0x3ffffff : ((bhi == 0) ? 0 : qjbhi);
+		BNishlnsubmul(&a, thatbn, qjbhi, j);
 		//a._ishlnsubmul(b, qj, j);
 		while (a.Negative) {
-			qj--;
+			qjbhi--;
 			a.Negative = false;
 			BNishlnsubmul(&a, thatbn, 1, j);
 			if (!BNIsZero(&a)) {
@@ -763,7 +798,9 @@ void BNWordDiv(bignumber_t * thisbn, bignumber_t * thatbn, bignumber_t * res) {
 			}
 		}
 	}
-
+	if (shift != 0) {
+		BNiushrn(&a, shift);
+	}
 	BNClone(&a, res);
 }
 
@@ -825,16 +862,17 @@ void BNiAdd(bignumber_t * thisbn, bignumber_t * thatbn) {
 	}
 	size_t i = 0;
 	for (; i < b.Length; i++) {
-		r = (a.words[i] | 0) + (b.words[i] | 0) + carry;
-		thisbn->words[i] = r & 0x3ffffff;
+		r = ((i <= a.Length) ? a.words[i] : 0) + (b.words[i] | 0) + carry;
+		if (i <= thisbn->Length) thisbn->words[i] = r & 0x3ffffff;
 		carry = r >> 26;
 	}
 	for (; carry != 0 && i < a.Length; i++) {
-		r = (a.words[i] | 0) + carry;
-		thisbn->words[i] = r & 0x3ffffff;
+		r = ((i <= a.Length) ? a.words[i] : 0) + carry;
+		if (i <= thisbn->Length) thisbn->words[i] = r & 0x3ffffff;
 		carry = r >> 26;
 	}
 	thisbn->Length = a.Length;
+	
 	if (carry != 0) {
 		thisbn->words[thisbn->Length] = carry;
 		thisbn->Length++;
@@ -846,7 +884,49 @@ void BNiAdd(bignumber_t * thisbn, bignumber_t * thatbn) {
 	}
 }
 
+void BNStrip(bignumber_t * thisnum) {
+	while (thisnum->words[thisnum->Length - 1] == 0 && thisnum->words[thisnum->Length - 2] == 0) {
+		thisnum->Length--;
+	}
+}
+
+void BNToBEUint8Array(bignumber_t * thisnum, uint8_t * res) {
+	int position = 31;
+	uint32_t carry = 0;
+	for (uint32_t i = 0, shift = 0; i < thisnum->Length; i++) {
+		uint32_t word = (thisnum->words[i] << shift) | carry;
+
+		res[position--] = word & 0xff;
+		if (position >= 0) {
+			res[position--] = (word >> 8) & 0xff;
+		}
+		if (position >= 0) {
+			res[position--] = (word >> 16) & 0xff;
+		}
+
+		if (shift == 6) {
+			if (position >= 0) {
+				res[position--] = (word >> 24) & 0xff;
+			}
+			carry = 0;
+			shift = 0;
+			} else {
+			carry = word >> 24;
+			shift += 2;
+		}
+	}
+	if (position >= 0) {
+		res[position--] = carry;
+
+		while (position >= 0) {
+			res[position--] = 0;
+		}
+	}
+}
+
 void BNAdd(bignumber_t * thisnum, bignumber_t * thatnum, bignumber_t * res) {
+	BNStrip(thisnum);
+	BNStrip(thatnum);
 	if (thisnum->Length > thatnum->Length) {
 		BNClone(thisnum, res);
 		BNiAdd(res, thatnum);
@@ -861,21 +941,21 @@ void BNAdd(bignumber_t * thisnum, bignumber_t * thatnum, bignumber_t * res) {
 void BNDivMod(bignumber_t * thisbn, bignumber_t * thatbn, bool positive, divmodres_t * res) {
 	//divmodres_t * res = malloc(sizeof(divmodres_t));
 	if (BNIsZero(thisbn)) {
-		BNClone(thisbn, res->div);
-		BNClone(thisbn, res->mod);
+		BNClone(thisbn, &res->div);
+		BNClone(thisbn, &res->mod);
 		return;
 	}
 
 	if (thisbn->Negative && !thatbn->Negative) {
 		bignumber_t s;
 		BNNeg(thisbn, &s);
-		BNDivMod(&s, thatbn, positive,res);
+		BNDivMod(&s, thatbn, positive, res);
 		bignumber_t mod;
-		BNNeg(res->mod, &mod);
+		BNNeg(&res->mod, &mod);
 		if (positive && mod.Negative) {
 			BNiAdd(&mod, thatbn);
 		}
-		BNClone(&mod, res->mod);
+		BNClone(&mod, &res->mod);
 		return;
 	}
 
@@ -893,20 +973,20 @@ void BNDivMod(bignumber_t * thisbn, bignumber_t * thatbn, bool positive, divmodr
 		BNDivMod(&s2, &s, positive, res);
 
 		bignumber_t mod;
-		BNNeg(res->mod, &mod);
+		BNNeg(&res->mod, &mod);
 		if (positive && mod.Negative) {
 			BNiAdd(&mod, thatbn);
 		}
 
-		BNClone(&mod, res->mod);
+		BNClone(&mod, &res->mod);
 		return;
 	}
 
 	if (thatbn->Length > thisbn->Length || BNCmp(thatbn, thatbn) < 0) {
-		res->div = malloc(sizeof(bignumber_t));
-		res->mod = thatbn;
+		res->div.Length = 0;
+		memcpy(&res->mod, thatbn, sizeof(bignumber_t));
 		return;
 	}
 
-	BNWordDiv(thisbn, thatbn, res->mod);
+	BNWordDiv(thisbn, thatbn, &res->mod);
 }

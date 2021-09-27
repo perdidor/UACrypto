@@ -9,6 +9,7 @@
 
 #include "Curve.h"
 #include "dstu_types.h"
+#include "bnops.h"
 #include <stdbool.h>
 #include <inttypes.h>
 #include <stdlib.h>
@@ -17,7 +18,7 @@
 
 void FieldFromCurve(field_t * newfield);
 void FieldFromHexStr(char * in_value, field_t * newfield);
-void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t * res);
+void FieldFromByteArray(uint8_t * in_value, int len, int max_size, field_t * res);
 void FieldFromUint32Buf(uint32_t * in_value, int len, field_t * res);
 
 
@@ -33,7 +34,6 @@ void FieldClearBit(field_t * field, uint32_t n);
 void FieldSetBit(field_t * field, uint32_t n);
 void FieldShiftRight(field_t * field, uint32_t n, field_t * res);
 void FieldShiftRightM(field_t * field, uint32_t n);
-//uint8_t * FieldBuf8(field_t * field);
 //uint8_t * FieldTruncate_Buf8(field_t * field);
 void FieldInvert(field_t * field, field_t * res);
 bool FieldTestBit(uint32_t n, field_t * field);
@@ -43,5 +43,7 @@ void FieldTruncate(field_t * field, field_t * res);
 void FieldCreateRandom(field_t * ret);
 field_t * FieldCompress(point_t * point);
 void FreeField(field_t * field);
+
+int FieldBuf8(field_t * field, uint8_t * buf);
 
 #endif /* FIELD_H_ */

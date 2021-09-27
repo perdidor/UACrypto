@@ -4,7 +4,7 @@
  * Created: 12.09.2021 07:31:03
  *  Author: root
  */ 
-#define F_CPU	8000000UL
+#define F_CPU	16000000UL
 
 #include <util/delay.h>
 #include "gost89.h"

@@ -37,23 +37,21 @@ void FieldFromHexStr(char * in_value, field_t * newfield) {
 	newfield->_is_field = true;
 }
 
-void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t * res) {
+void FieldFromByteArray(uint8_t * in_value, int len, int max_size, field_t * res) {
 	PORTD ^= 0x40;
-	size_t tmpsize = ceil(len / 4);
-	tmpsize = (tmpsize > max_size ? tmpsize : max_size);
-	memset(res->bytes, 0x00, 32 * sizeof(uint32_t));
-	uint32_t code = 0;
-	uint32_t bpos = 0;
-	uint32_t vidx = 0;
-	uint32_t idx = len - 1;
-	for(; idx > 0; idx-- ) {
-		code = in_value[idx];
+	memset(res->bytes, 0x00, 22 * sizeof(uint32_t));
+	int code = 0;
+	int bpos = 0;
+	int vidx = 0;
+	int idx = len - 1;
+	for(; idx >= 0; idx-- ) {
+		code = (int)in_value[idx];
 		bpos = bpos % 4;
 
 		if (code < 0) {
 			code = 256 + code;
 		}
-		res->bytes[vidx] |= (code << (bpos*8));
+		res->bytes[vidx] |= ((uint32_t)code << ((uint32_t)bpos*8));
 
 		if(bpos == 3) vidx++;
 		bpos++;
@@ -63,7 +61,6 @@ void FieldFromByteArray(uint8_t * in_value, size_t len, size_t max_size, field_t
 }
 
 void FreeField(field_t * field) {
-	//free(field->bytes);
 	memset(field->bytes, 0x00, 22 * sizeof(uint32_t));
 	field->length = 0;
 }
@@ -71,7 +68,7 @@ void FreeField(field_t * field) {
 void FieldFromUint32Buf(uint32_t * in_value, int len, field_t * res) {
 	PORTD ^= 0x40;
 	res->length = len;
-	memset(&res->bytes[0], 0x00, 2 * sizeof(uint32_t));
+	memset(&res->bytes[0], 0x00, 22 * sizeof(uint32_t));
 	memcpy(&res->bytes[0], &in_value[0], res->length * sizeof(uint32_t));
 	res->_is_field = true;
 }
@@ -166,13 +163,16 @@ bool FieldIs_Less(field_t * thisfield, field_t * thatfield) {
 	PORTD ^= 0x40;
 	int blen = thisfield->length;
 	int olen = thatfield->length;
-	while(thatfield->bytes[olen - 1] == 0) olen--;
-	while(thisfield->bytes[blen - 1] == 0) blen--;
+	while(thatfield->bytes[olen - 1] == 0 && olen >= 1) olen--;
+	while(thisfield->bytes[blen - 1] == 0 && blen >= 1) blen--;
+	if (olen != blen) {
+		return olen > blen;
+	}
 	while (blen > 0 && (thisfield->bytes[blen - 1] - thatfield->bytes[blen - 1] == 0))
 	{
 		blen--;
 	}
-	return blen == 0 ? false : (thisfield->bytes[blen - 1] < thatfield->bytes[blen - 1]);
+	return blen == 0 ? true : (thisfield->bytes[blen - 1] < thatfield->bytes[blen - 1]);
 }
 
 uint32_t FieldBitLength(field_t * field) {
@@ -236,30 +236,34 @@ void FieldShiftRightM(field_t * field, uint32_t n) {
 	g2fmshiftRight(field->bytes, field->length, n);
 }
 
-//uint8_t * FieldBuf8(field_t * field) {
-	//uint8_t * ret = malloc(field->length * 4);
+int FieldBuf8(field_t * field, uint8_t * buf) {
+	int fieldlen = (int)field->length;
 	//size_t len = field->length * sizeof(uint8_t);
-//
-	//for (uint8_t idx = 0; idx < field->length; idx++) {
-		//ret[len - idx * sizeof(uint8_t) - 1] = field->bytes[idx] & 0xFF;
-		//ret[len - idx * sizeof(uint8_t) - 2] = field->bytes[idx] >> 8 & 0xFF;
-		//ret[len - idx * sizeof(uint8_t) - 3] = field->bytes[idx] >> 16 & 0xFF;
-		//ret[len - idx * sizeof(uint8_t) - 4] = field->bytes[idx] >> 24 & 0xFF;
+	//while (field->bytes[fieldlen - 1] == 0) {
+		//fieldlen--;
 	//}
-	//return ret;
-//}
-//
+	int fieldbuflen = fieldlen * 4;
+
+	for (uint8_t idx = 0; idx < fieldlen; idx++) {
+		buf[fieldbuflen - idx * 4 - 1] = field->bytes[idx] & 0xFF;
+		buf[fieldbuflen - idx * 4 - 2] = field->bytes[idx] >> 8 & 0xFF;
+		buf[fieldbuflen - idx * 4 - 3] = field->bytes[idx] >> 16 & 0xFF;
+		buf[fieldbuflen - idx * 4 - 4] = field->bytes[idx] >> 24 & 0xFF;
+	}
+	return fieldbuflen;
+}
+
 //uint8_t * FieldTruncate_Buf8(field_t * field) {
-	//uint8_t * ret = FieldBuf8(field);
+	//uint8_t ret;// = FieldBuf8(field);
 	//size_t start = field->length * 4 - g2fmblength(Curve_field_order, 17);
 	//if(start < 0) {
 		//return ret;
 	//}
 	//size_t newretlen = field->length * 4 - start;
-	//uint8_t * newret = malloc(newretlen);
-	//memcpy(newret, &ret[start], newretlen);
-	//free(ret);
-	//return newret;
+	////uint8_t * newret = malloc(newretlen);
+	////memcpy(newret, &ret[start], newretlen);
+	////free(ret);
+	//return ret;
 //}
 
 uint8_t FieldTrace(field_t * field) {
@@ -297,32 +301,24 @@ void FieldTruncate(field_t * field, field_t * res) {
 		FieldClearBit(res, xbit - 1);
 		xbit = FieldBitLength(res);
 	}
-	FreeField(&tmporderfield);
 }
 
 void FieldCreateRandom(field_t * res) {
-	PORTD ^= 0x40;
-	field_t * tmpf = malloc(sizeof(field_t));
-	FieldFromUint32Buf(Curve_field_order, 17, tmpf);
-	size_t bits = FieldBitLength(tmpf);
-	uint8_t words = bits / 8;
-	uint8_t * rand8 = malloc(words);
-	field_t ret;
-	while (1) {
-		for (uint8_t i = 0; i < words; i++)
+	field_t tmpf;
+	FieldFromUint32Buf(Curve_field_order, 17, &tmpf);
+	uint8_t rand8[33];
+	//field_t ret;
+	while (true) {
+		PORTD ^= 0x40;
+		for (uint8_t i = 1; i < 33; i++)
 		{
 			rand8[i] = GetRandomByte();
 		}
-		FieldFromByteArray(rand8, words, words, &ret);
-		if (FieldIs_Less(&ret, tmpf))
-		{
+		FieldFromByteArray(rand8, 33, 9, res);
+		if (FieldIs_Less(res, &tmpf)) {
 			break;
 		}
 	}
-	res->length = ret.length;
-	memcpy(&res->bytes[0], &ret.bytes[0], sizeof(uint32_t) * ret.length);
-	free(rand8);
-	free(tmpf);
 }
 
 field_t * FieldCompress(point_t * point) {
