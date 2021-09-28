@@ -100,7 +100,9 @@ void SignHash(uint8_t * hashvalue) {
 	FieldFromByteArray(withzero, 33, 9, &hash_v);
 
 	point_t basepoint;
-
+	
+	field_t curve_order;
+	FieldFromUint32Buf(Curve_field_order, 17, &curve_order);
 	FieldFromUint32Buf(Curve_basepoint_field_x, 18, &basepoint.x);
 	FieldFromUint32Buf(Curve_basepoint_field_y, 9, &basepoint.y);
 
@@ -112,7 +114,6 @@ void SignHash(uint8_t * hashvalue) {
 		point_t eG2;
 		field_t r;
 		field_t r2;
-		field_t curve_order;
 		field_t paramd;
 		field_t rand_e;
 
@@ -131,17 +132,29 @@ void SignHash(uint8_t * hashvalue) {
 		uint8_t signatureOut[64];
 		cnt++;
 		
-		FieldFromUint32Buf(erand_bytes, 9, &rand_e);
+		uint32_t localerand_bytes[9];
+		while (true) {
+			localerand_bytes[0] = (uint32_t)((uint32_t)0x00 << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
+			for (int i = 1; i < 8; i++)
+			{
+				localerand_bytes[i] = (uint32_t)((uint32_t)GetRandomByte() << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
+			}
+			localerand_bytes[8] = 0;
+			FieldFromUint32Buf(localerand_bytes, 9, &rand_e);
+			if (FieldIs_Less(&rand_e, &curve_order)) {
+				break;
+			}
+		}
 		
 		PointMulPos_Stage1(&basepoint, &rand_e, &eG1);
 		PointMulPos_Stage2(&rand_e, &eG1, &eG2);
 		sprintf(buff, "==== PASS %d ====\r\n", cnt);
+		EXT_UART_Transmit(buff);
 		FieldMod_Mul(&hash_v, &eG2.x, &r);
 		FieldTruncate(&r, &r2);
 		
-		FieldFromUint32Buf(erand_bytes, 9, &rand_e);
+		FieldFromUint32Buf(localerand_bytes, 9, &rand_e);
 		FieldFromUint32Buf(Priv_param_d, 8, &paramd);
-		FieldFromUint32Buf(Curve_field_order, 17, &curve_order);
 		int r2buffsize = FieldBuf8(&r2, buff8);
 		BNFromUint8Buf(buff8, r2buffsize, &R);
 		int erandbuffsize = FieldBuf8(&rand_e, buff8);
@@ -164,6 +177,10 @@ void SignHash(uint8_t * hashvalue) {
 			signatureOut[i] = signatureR[31 - i];
 			signatureOut[i + 32] = signatureS[31 - i];
 		}
+		EXT_UART_Transmit("hash value:\r\n");
+		PrintDebugByteArray(hashvalue, 32);
+		EXT_UART_Transmit("random field value:\r\n");
+		PrintDebugUInt32Array(localerand_bytes, 9, -1);
 		EXT_UART_Transmit("signatureOut value:\r\n");
 		PrintDebugByteArray(signatureOut, 64);
 		PORTD &= ~(1UL << 6);

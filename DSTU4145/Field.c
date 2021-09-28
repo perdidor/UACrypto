@@ -204,13 +204,14 @@ void FieldClearBit(field_t * field, uint32_t n) {
 	PORTD ^= 0x40;
 	int test_word = floor(n / 32);
 	int test_bit = n % 32;
-	int mask = 1 << test_bit;
+	//int mask = (1 << test_bit);
 	if (field->length < test_word - 1)
 	{
 		return;
 	}
 
-	field->bytes[test_word] ^= (field->bytes[test_word] & mask);
+	//field->bytes[test_word] ^= (field->bytes[test_word] & mask);
+	field->bytes[test_word] &= ~(1UL << test_bit);
 }
 
 void FieldSetBit(field_t * field, uint32_t n) {
@@ -306,34 +307,29 @@ void FieldTruncate(field_t * field, field_t * res) {
 	}
 }
 
-uint32_t randarray[9];
-void FieldCreateRandom(field_t * res, bool uselast) {
-	field_t tmpf;
-	FieldFromUint32Buf(Curve_field_order, 17, &tmpf);
-	//uint8_t rand8[33];
-	//field_t ret;
-	if (uselast) {
-		FieldFromUint32Buf(randarray, 9, res);
-		return;
-	}
-	while (true) {
-		PORTD ^= 0x40;
-		for (int i = 0; i < 8; i++)
-		{
-			randarray[i] = (uint32_t)(((uint32_t)rand() << 8) | (uint32_t)rand());
-		}
-		randarray[8] = 0;
-		//for (uint8_t i = 1; i < 33; i++)
+//volatile uint32_t randarray[9] = { 0,0,0,0,0,0,0,0,0 };
+//void FieldCreateRandom(field_t * res, bool uselast) {
+	//field_t tmpf;
+	//FieldFromUint32Buf(Curve_field_order, 17, &tmpf);
+	////uint8_t rand8[33];
+	////field_t ret;
+	//if (uselast) {
+		//FieldFromUint32Buf(randarray, 9, res);
+		//return;
+	//}
+	//while (true) {
+		//PORTD ^= 0x40;
+		////randarray[0] = ((uint32_t)0x00 << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
+		//for (int i = 0; i < 8; i++)
 		//{
-			//rand8[i] = GetRandomByte();
+			//randarray[i] = ((uint32_t)0x00 << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
 		//}
-		//FieldFromByteArray(rand8, 33, 9, res);
-		FieldFromUint32Buf(randarray, 9, res);
-		if (FieldIs_Less(res, &tmpf)) {
-			break;
-		}
-	}
-}
+		//FieldFromUint32Buf(randarray, 9, res);
+		//if (FieldIs_Less(res, &tmpf)) {
+			//break;
+		//}
+	//}
+//}
 
 field_t * FieldCompress(point_t * point) {
 	PORTD ^= 0x40;
