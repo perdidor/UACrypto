@@ -30,8 +30,7 @@
 
 
 uint32_t Priv_param_d[8] = { 2082397019, 1468370442, 823178231, 2862269997, 2052372100, 4252500519, 3735157276, 574723566 };
-uint32_t bigdwords[11] = { 2022235, 23298719, 54490488, 11846722, 11180742, 43330977, 58729079, 65565685, 32431777, 561253, 0 };
-uint32_t bigorderwords[23] = { 8210189, 6145316, 43547966, 15451659, 6773025, 0, 0, 0, 0, 2097152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 uint32_t Priv_mod_bits[3] = { 257, 12, 0 };
 uint8_t Priv_mod_words = 9;
 uint8_t Priv_sbox[64] = { 169, 214, 235, 69, 241, 60, 112, 130, 128, 196, 150, 123, 35, 31, 94, 173, 246, 88, 235, 164, 192, 55, 41, 29, 56, 217, 107, 240, 37, 202, 78, 23, 248, 233, 114, 13, 198, 21, 180, 58, 40, 151, 95, 11, 193, 222, 163, 100, 56, 181, 100, 234, 44, 23, 159, 208, 18, 62, 109, 184, 250, 197, 121, 4 };
@@ -74,10 +73,7 @@ precomp_set_t PreComputedPoints = {
 	} 
 };
 
-uint32_t sssss[9] = { 3252810829, 1647146478, 1826671127, 1278504361, 1259005204, 2046778452, 2015858012, 1366928916, 0 };
-
-//uint32_t erand_bytes[9] = { 3664937398, 1653150529, 2808328673, 2317406940, 1733758146, 1812339012, 1127984026, 4253689913, 0 };
-uint32_t erand_bytes[9] = { 3815796871, 2073761387, 35138959, 1903234609, 384505738, 3967447698, 3055808598, 3373911301, 0 };
+uint32_t erand_bytes[9] = { 3664937398, 1653150529, 2808328673, 2317406940, 1733758146, 1812339012, 1127984026, 4253689913, 0 };
 
 void ArrayAddZero(uint8_t * array, uint8_t len, bool reorder, uint8_t * res) {
 	uint8_t newdatalen = len + 1;
@@ -109,14 +105,16 @@ void SignHash(uint8_t * hashvalue) {
 	FieldFromUint32Buf(Curve_basepoint_field_y, 9, &basepoint.y);
 
 	char buff[32];
+		
 	while (1) {
+		PORTD |= 1UL << 6;
 		point_t eG1;
 		point_t eG2;
 		field_t r;
 		field_t r2;
-		//field_t randE;
 		field_t curve_order;
 		field_t paramd;
+		field_t rand_e;
 
 		bignumber_t R;
 		bignumber_t R2;
@@ -130,34 +128,18 @@ void SignHash(uint8_t * hashvalue) {
 		uint8_t buff8[128];
 		uint8_t signatureS[32];
 		uint8_t signatureR[32];
+		uint8_t signatureOut[64];
 		cnt++;
 		
-		field_t rand_e;
-		
-		//FieldCreateRandom(&rand_e);
 		FieldFromUint32Buf(erand_bytes, 9, &rand_e);
-		//rand_e.length = 9;
-		//for (int i = 0; i < 8; i++)
-		//{
-			//rand_e.bytes[i] = (uint32_t)rand();
-		//}
 		
 		PointMulPos_Stage1(&basepoint, &rand_e, &eG1);
 		PointMulPos_Stage2(&rand_e, &eG1, &eG2);
 		sprintf(buff, "==== PASS %d ====\r\n", cnt);
-		EXT_UART_Transmit(buff);
-		EXT_UART_Transmit("random field value:\r\n");
-		PrintDebugUInt32Array(rand_e.bytes, 9, -1);
-		EXT_UART_Transmit("X coord value:\r\n");
-		PrintDebugUInt32Array(&eG2.x.bytes[0], eG2.x.length, -1);
-		EXT_UART_Transmit("Y coord value:\r\n");
-		PrintDebugUInt32Array(&eG2.y.bytes[0], eG2.y.length, -1);
 		FieldMod_Mul(&hash_v, &eG2.x, &r);
 		FieldTruncate(&r, &r2);
-		EXT_UART_Transmit("r field value:\r\n");
-		PrintDebugUInt32Array(&r2.bytes[0], r2.length, -1);
 		
-		//FieldFromUint32Buf(erand_bytes, 9, &randE);
+		FieldFromUint32Buf(erand_bytes, 9, &rand_e);
 		FieldFromUint32Buf(Priv_param_d, 8, &paramd);
 		FieldFromUint32Buf(Curve_field_order, 17, &curve_order);
 		int r2buffsize = FieldBuf8(&r2, buff8);
@@ -175,13 +157,15 @@ void SignHash(uint8_t * hashvalue) {
 		BNFromUint8Buf(buff8, orderbuffsize, &BigOrder);
 		BigOrder.Length = 10;
 		BNWordDiv(&BigS2, &BigOrder, &BigS3);
-		EXT_UART_Transmit("signature UInt32 array value:\r\n");
-		PrintDebugUInt32Array(&BigS3.words[0], BigS3.Length, -1);
 		BNToBEUint8Array(&BigS3, signatureS);
 		BNToBEUint8Array(&R, signatureR);
-		EXT_UART_Transmit("signatureS value:\r\n");
-		PrintDebugByteArray(signatureS, 32);
-		EXT_UART_Transmit("signatureR value:\r\n");
-		PrintDebugByteArray(signatureR, 32);
+		for (int i = 31; i >= 0; i--)
+		{
+			signatureOut[i] = signatureR[31 - i];
+			signatureOut[i + 32] = signatureS[31 - i];
+		}
+		EXT_UART_Transmit("signatureOut value:\r\n");
+		PrintDebugByteArray(signatureOut, 64);
+		PORTD &= ~(1UL << 6);
 	}
 }

@@ -12,7 +12,7 @@ uint8_t GetRandomByte() {
 }
 
 void PRNG_Init() {
-	uint16_t rand_seed = 0;
+	unsigned int rand_seed = 0;
 	for (uint8_t i = 0; i < 65; i++)
 	{
 		rand_seed += ADC_GetEntropy();

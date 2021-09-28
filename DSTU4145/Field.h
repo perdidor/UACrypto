@@ -40,7 +40,7 @@ bool FieldTestBit(uint32_t n, field_t * field);
 void FieldClone(field_t * thatfield, field_t * res);
 uint8_t FieldTrace(field_t * field);
 void FieldTruncate(field_t * field, field_t * res);
-void FieldCreateRandom(field_t * ret);
+void FieldCreateRandom(field_t * res, bool uselast);
 field_t * FieldCompress(point_t * point);
 void FreeField(field_t * field);
 

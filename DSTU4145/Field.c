@@ -168,11 +168,13 @@ bool FieldIs_Less(field_t * thisfield, field_t * thatfield) {
 	if (olen != blen) {
 		return olen > blen;
 	}
-	while (blen > 0 && (thisfield->bytes[blen - 1] - thatfield->bytes[blen - 1] == 0))
+	if (blen == 0) {
+		return true;
+	} else
 	{
 		blen--;
 	}
-	return blen == 0 ? true : (thisfield->bytes[blen - 1] < thatfield->bytes[blen - 1]);
+	return thatfield->bytes[blen] > thisfield->bytes[blen];
 }
 
 uint32_t FieldBitLength(field_t * field) {
@@ -296,25 +298,37 @@ void FieldTruncate(field_t * field, field_t * res) {
 	FieldFromUint32Buf(Curve_field_order, 17, &tmporderfield);
 	uint32_t bitl_o = FieldBitLength(&tmporderfield);
 	uint32_t xbit = FieldBitLength(field) + 1;
-	memcpy(res, field, sizeof(field_t));
+	FieldFromUint32Buf(field->bytes, field->length, res);
+	//memcpy(res, field, sizeof(field_t));
 	while (bitl_o <= xbit) {
 		FieldClearBit(res, xbit - 1);
 		xbit = FieldBitLength(res);
 	}
 }
 
-void FieldCreateRandom(field_t * res) {
+uint32_t randarray[9];
+void FieldCreateRandom(field_t * res, bool uselast) {
 	field_t tmpf;
 	FieldFromUint32Buf(Curve_field_order, 17, &tmpf);
-	uint8_t rand8[33];
+	//uint8_t rand8[33];
 	//field_t ret;
+	if (uselast) {
+		FieldFromUint32Buf(randarray, 9, res);
+		return;
+	}
 	while (true) {
 		PORTD ^= 0x40;
-		for (uint8_t i = 1; i < 33; i++)
+		for (int i = 0; i < 8; i++)
 		{
-			rand8[i] = GetRandomByte();
+			randarray[i] = (uint32_t)(((uint32_t)rand() << 8) | (uint32_t)rand());
 		}
-		FieldFromByteArray(rand8, 33, 9, res);
+		randarray[8] = 0;
+		//for (uint8_t i = 1; i < 33; i++)
+		//{
+			//rand8[i] = GetRandomByte();
+		//}
+		//FieldFromByteArray(rand8, 33, 9, res);
+		FieldFromUint32Buf(randarray, 9, res);
 		if (FieldIs_Less(res, &tmpf)) {
 			break;
 		}
