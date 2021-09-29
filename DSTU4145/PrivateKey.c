@@ -73,8 +73,6 @@ precomp_set_t PreComputedPoints = {
 	} 
 };
 
-uint32_t erand_bytes[9] = { 3664937398, 1653150529, 2808328673, 2317406940, 1733758146, 1812339012, 1127984026, 4253689913, 0 };
-
 void ArrayAddZero(uint8_t * array, uint8_t len, bool reorder, uint8_t * res) {
 	uint8_t newdatalen = len + 1;
 	int index = 0;
@@ -109,7 +107,6 @@ void SignHash(uint8_t * hashvalue) {
 	char buff[32];
 		
 	while (1) {
-		PORTD |= 1UL << 6;
 		point_t eG1;
 		point_t eG2;
 		field_t r;
@@ -145,7 +142,6 @@ void SignHash(uint8_t * hashvalue) {
 				break;
 			}
 		}
-		
 		PointMulPos_Stage1(&basepoint, &rand_e, &eG1);
 		PointMulPos_Stage2(&rand_e, &eG1, &eG2);
 		sprintf(buff, "==== PASS %d ====\r\n", cnt);

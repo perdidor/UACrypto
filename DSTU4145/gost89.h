@@ -66,15 +66,17 @@ void gost89BoxInit(void);
 uint32_t gost89Pass(uint32_t x);
 void gost89Crypt64(uint8_t * clear, uint8_t * outres);
 void gost89Decrypt64(uint8_t * crypt, uint8_t * outres);
-uint8_t * gost89Crypt64_CFB(uint8_t * iv, uint8_t * plain);
-uint8_t * gost89Decrypt64_CFB(uint8_t * iv, uint8_t * crypted);
-uint8_t * gost89Crypt_CFB(uint8_t * iv, uint8_t * plain, size_t plainlen);
-uint8_t * gost89Decrypt_CFB(uint8_t * iv, uint8_t * crypted, size_t cryptedlen);
-uint8_t * gost89Crypt(uint8_t * iv, uint8_t * plain, size_t plainlen);
-uint8_t * gost89Decrypt(uint8_t * crypted, size_t cryptedlen);
-uint8_t * DecodeData(uint8_t * crypted, size_t cryptlen, uint8_t * pw, size_t pwlen);
+void gost89Crypt64_CFB(uint8_t * iv, uint8_t * plain, uint8_t * outres);
+void gost89Decrypt64_CFB(uint8_t * iv, uint8_t * crypted, uint8_t * outres);
+void gost89Crypt_CFB(uint8_t * iv, uint8_t * plain, size_t plainlen, uint8_t * resarray);
+void gost89Decrypt_CFB(uint8_t * iv, uint8_t * crypted, size_t cryptedlen, uint8_t * resarray);
+void gost89Crypt(uint8_t * iv, uint8_t * plain, size_t plainlen, uint8_t * resarray);
+void gost89Decrypt(uint8_t * crypted, size_t cryptedlen, uint8_t * resarray);
+void gost89DecodeData(uint8_t * crypted, size_t cryptlen, uint8_t * pw, size_t pwlen, uint8_t * plain);
 size_t gost89MacOut(uint8_t * buf, int nbits, uint8_t * outres);
 void Gost89ConvertPassword(uint8_t * pw, size_t pwlen);
+void gost89Mac64(uint8_t * datablock, uint8_t * outres);
+void gost89Mac(uint8_t * data, size_t datalen, uint8_t * outres);
 
 void Gost89HashSwapBytes(uint8_t * w, uint8_t * k);
 void Gost89HashCircle_XOR8(uint8_t * w, uint8_t * k);
@@ -88,7 +90,7 @@ void Gost89HashFinish(void);
 void Gost89HashReset(void);
 void Gost89HashCompute(uint8_t * data, size_t datalen);
 void Gost89HashDumb_KDF(uint8_t * input, size_t inputlen, size_t n_passes);
-uint8_t * Gost89HashPB_KDF(uint8_t * input, size_t inputlen, uint8_t * salt, size_t saltlen, size_t iterations);
+void Gost89HashPB_KDF(uint8_t * input, size_t inputlen, uint8_t * salt, size_t saltlen, size_t iterations, uint8_t * reskey);
 void Gost89HashZeroAll(void);
 
 #endif /* GOST89_H_ */

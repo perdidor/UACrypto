@@ -35,6 +35,16 @@ void NoTaxPrepareTemplate(size_t rawDataLength, uint8_t * timestamp, uint8_t * h
 	memcpy(&NoTaxTemplate2_2458[2426], hashvalue, 32);
 }
 
+void NoTaxPrepareDataToSign(uint8_t * hashvalue) {
+	memset(DataToSign, 0x00, DataToSignLength);
+	memcpy(DataToSign, dtspreamble, 25);
+	memcpy(&DataToSign[25], &NoTaxTemplate2_2458[NoTaxTemplate2_certv2offset], 376);
+	memcpy(&DataToSign[401], dtspreamble2, 43);
+	memcpy(&DataToSign[444], hashvalue, 32);
+	memcpy(&DataToSign[476], dtspreamble3, 15);
+	memcpy(&DataToSign[491], dts_timestamp, 15);
+}
+
 //	add this to unsigned data length and place result as bytes to Template1_63 at pos 2-3 prior sending!!!
 const size_t NoTaxTotalLengthInitValue = 2630;
 
@@ -46,6 +56,17 @@ const size_t NoTaxElem2LengthInitValue = 2611;
 
 //	add this to unsigned data length and place result as bytes to Template1_63 at pos 44-45 prior sending!!!
 const size_t NoTaxElem3LengthInitValue = 19;
+
+const size_t NoTaxTemplate1_SignedDataOffset = 1980;
+
+uint8_t dtspreamble[25] = { 49, 130, 1, 246, 48, 130, 1, 137, 6, 11, 42, 134, 72, 134, 247, 13, 1, 9, 16, 2, 47, 49, 130, 1, 120 };
+uint8_t dtspreamble2[43] = { 48, 24, 6, 9, 42, 134, 72, 134, 247, 13, 1, 9, 3, 49, 11, 6, 9, 42, 134, 72, 134, 247, 13, 1, 7, 1, 48, 47, 6, 9, 42, 134, 72, 134, 247, 13, 1, 9, 4, 49, 34, 4, 32 };
+uint8_t dtspreamble3[15] = { 48, 28, 6, 9, 42, 134, 72, 134, 247, 13, 1, 9, 5, 49, 15 };
+uint8_t dts_timestamp[15] = { 23, 13, 50, 49, 48, 57, 50, 57, 48, 56, 53, 49, 51, 54, 90 };
+
+uint8_t DataToSign[1024];
+size_t DataToSignLength = 506;
+size_t NoTaxTemplate2_certv2offset = 2007;
 
 //	must be changed according to unsigned data length before sending out
 //	must be followed with unsigned data array
@@ -227,7 +248,9 @@ uint8_t NoTaxTemplate2_2458[2458] = {
 	0x30, 0x0C, 0x06, 0x0A, 0x2A, 0x86, 0x24, 0x02, 0x01, 0x01, 0x01, 0x01,
 	0x02, 0x01, 0xA0, 0x82, 0x01, 0xF6, 0x30, 0x82, 0x01, 0x89, 0x06, 0x0B,
 	0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x10, 0x02, 0x2F, 0x31,
-	0x82, 0x01, 0x78, 0x30, 0x82, 0x01, 0x74, 0x30, 0x82, 0x01, 0x70, 0x30,
+	0x82, 0x01, 0x78, 
+	//certificatev2 begins here, offset = 1992
+	0x30, 0x82, 0x01, 0x74, 0x30, 0x82, 0x01, 0x70, 0x30,
 	0x82, 0x01, 0x6C, 0x30, 0x0C, 0x06, 0x0A, 0x2A, 0x86, 0x24, 0x02, 0x01,
 	0x01, 0x01, 0x01, 0x02, 0x01, 0x04, 0x20, 0x55, 0x85, 0xB3, 0x7C, 0x7A,
 	0xB9, 0x1B, 0x9E, 0x37, 0x89, 0xA6, 0x25, 0xFF, 0xC7, 0x7F, 0xFC, 0xCD,
@@ -267,7 +290,7 @@ uint8_t NoTaxTemplate2_2458[2458] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-//	last 13 bytes must be filled with UTC datetime byte array[y1, y1, M1, M1, d1, d2, h1, h2, m1, m2, s1, s2, 0x5a]
+//	last 13 bytes must be filled with UTC datetime byte array[y1, y2, M1, M2, d1, d2, h1, h2, m1, m2, s1, s2, 0x5a]
 uint8_t NoTaxTemplate3_30[30] = {
 	0x30, 0x1C, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09,
 	0x05, 0x31, 0x0F, 0x17, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
