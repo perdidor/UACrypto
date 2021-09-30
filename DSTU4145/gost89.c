@@ -9,7 +9,14 @@
 #include <util/delay.h>
 #include "gost89.h"
 #include "DSTU.h"
+#include "PrivateKey.h"
 #include "USART.h"
+#include "dstu_types.h"
+#include "Field.h"
+#include "notaxTemplate.h"
+#include "gost89.h"
+#include "ADCops.h"
+#include "PRNG.h"
 #include <math.h>
 #include <avr/io.h>
 #include <stdio.h>
@@ -518,11 +525,8 @@ void Gost89HashFinish() {
 }
 
 void Gost89HashReset() {
-	for (int idx = 0; idx < 32; idx++)
-	{
-		gost89Hash_Value[idx] = 0;
-		gost89Hash_S[idx] = 0;
-	}
+	memset(gost89Hash_S, 0, 32);
+	memset(gost89Hash_Value, 0, 32);
 	gost89Hash_Leftlength = 0;
 	gost89HashLength = 0;
 }

@@ -38,6 +38,19 @@ uint32_t erand_bytes[9];
 
 precomp_set_t PreComputedPoints;
 
+uint8_t signatureOut[64];
+
+uint32_t erand_bytes[9];
+
+uint8_t uint8_buffer[128];
+
+uint8_t withzero[33];
+
+field_t curve_order;
+field_t rand_e;
+point_t basepoint;
+
 void SignHash(uint8_t * hashvalue);
+void Signer_Setup();
 
 #endif /* PRIVATEKEY_H_ */

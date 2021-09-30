@@ -20,10 +20,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-uint8_t NoTaxTemplate1_63[63];
-uint8_t NoTaxTemplate2_2458[2458];
-uint8_t NoTaxTemplate3_30[30];
-uint8_t NoTaxTemplate4_81[81];
+const uint8_t NoTaxTemplate1_63[63];
+const uint8_t NoTaxTemplate2_2458[451];
+const uint8_t NoTaxTemplate3_30[30];
+const uint8_t NoTaxTemplate4_81[81];
 
 
 const size_t NoTaxTotalLengthInitValue;
@@ -36,7 +36,7 @@ uint8_t dtspreamble2[43];
 uint8_t dtspreamble3[15];
 uint8_t dts_timestamp[15];
 
-uint8_t DataToSign[1024];
+uint8_t DataToSign[512];
 size_t DataToSignLength;
 size_t NoTaxTemplate2_certv2offset;
 

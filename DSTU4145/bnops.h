@@ -17,7 +17,7 @@
 
 typedef struct {
 	uint32_t words[32];
-	size_t Length;
+	int Length;
 	bool Negative;
 } bignumber_t;
 

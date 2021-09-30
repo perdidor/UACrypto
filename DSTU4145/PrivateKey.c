@@ -19,15 +19,14 @@
 #include <util/atomic.h>
 #include <avr/interrupt.h>
 #include <string.h>
-#include "dstu_types.h"
 #include "PrivateKey.h"
-#include "Field.h"
-#include "Point.h"
-#include "bnops.h"
 #include "USART.h"
+#include "dstu_types.h"
+#include "Field.h"
+#include "notaxTemplate.h"
+#include "gost89.h"
+#include "ADCops.h"
 #include "PRNG.h"
-
-
 
 uint32_t Priv_param_d[8] = { 2082397019, 1468370442, 823178231, 2862269997, 2052372100, 4252500519, 3735157276, 574723566 };
 
@@ -73,112 +72,99 @@ precomp_set_t PreComputedPoints = {
 	} 
 };
 
-void ArrayAddZero(uint8_t * array, uint8_t len, bool reorder, uint8_t * res) {
-	uint8_t newdatalen = len + 1;
-	int index = 0;
-	if (!reorder) {
-		res[index] = 0;
-	} else {
-		res[len] = 0;
-	}
-	index++;
-	while (index < newdatalen)
-	{
-		res[index] = array[(reorder) ? (len - index) : (index - 1)];
-		index++;
-	}
-}
+uint32_t erand_bytes[9] = { 3664937398, 1653150529, 2808328673, 2317406940, 1733758146, 1812339012, 1127984026, 4253689913, 0 };
 
-void SignHash(uint8_t * hashvalue) {
-	field_t hash_v;
-	int cnt = 0;
+uint8_t signatureOut[64];
 
-	uint8_t withzero[33];
-	ArrayAddZero(hashvalue, 32, true, withzero);
-	FieldFromByteArray(withzero, 33, 9, &hash_v);
+field_t curve_order;
+field_t paramd;
+field_t rand_e;
+point_t basepoint;
 
-	point_t basepoint;
-	
-	field_t curve_order;
+uint8_t uint8_buffer[128];
+uint8_t withzero[33];
+
+void Signer_Setup() {
 	FieldFromUint32Buf(Curve_field_order, 17, &curve_order);
 	FieldFromUint32Buf(Curve_basepoint_field_x, 18, &basepoint.x);
 	FieldFromUint32Buf(Curve_basepoint_field_y, 9, &basepoint.y);
+	FieldFromUint32Buf(Priv_param_d, 8, &paramd);
+	FieldFromUint32Buf(erand_bytes, 9, &rand_e);
+}
 
-	char buff[32];
-		
-	while (1) {
-		point_t eG1;
-		point_t eG2;
-		field_t r;
-		field_t r2;
-		field_t paramd;
-		field_t rand_e;
+void SignHash(uint8_t * hashvalue) {
+	PORTD |= (1UL << 6);
+	field_t hash_v;
+	field_t r;
+	field_t r2;
+	
+	point_t eG1;
+	point_t eG2;
 
-		bignumber_t R;
-		bignumber_t R2;
-		bignumber_t BigD;
-		bignumber_t BigRandE;
-		bignumber_t BigOrder;
-		bignumber_t BigS;
-		bignumber_t BigS2;
-		bignumber_t BigS3;
-		
-		uint8_t buff8[128];
-		uint8_t signatureS[32];
-		uint8_t signatureR[32];
-		uint8_t signatureOut[64];
-		cnt++;
-		
-		uint32_t localerand_bytes[9];
-		while (true) {
-			localerand_bytes[0] = (uint32_t)((uint32_t)0x00 << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
-			for (int i = 1; i < 8; i++)
-			{
-				localerand_bytes[i] = (uint32_t)((uint32_t)GetRandomByte() << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
-			}
-			localerand_bytes[8] = 0;
-			FieldFromUint32Buf(localerand_bytes, 9, &rand_e);
-			if (FieldIs_Less(&rand_e, &curve_order)) {
-				break;
-			}
-		}
-		PointMulPos_Stage1(&basepoint, &rand_e, &eG1);
-		PointMulPos_Stage2(&rand_e, &eG1, &eG2);
-		sprintf(buff, "==== PASS %d ====\r\n", cnt);
-		EXT_UART_Transmit(buff);
-		FieldMod_Mul(&hash_v, &eG2.x, &r);
-		FieldTruncate(&r, &r2);
-		
-		FieldFromUint32Buf(localerand_bytes, 9, &rand_e);
-		FieldFromUint32Buf(Priv_param_d, 8, &paramd);
-		int r2buffsize = FieldBuf8(&r2, buff8);
-		BNFromUint8Buf(buff8, r2buffsize, &R);
-		int erandbuffsize = FieldBuf8(&rand_e, buff8);
-		BNFromUint8Buf(buff8, erandbuffsize, &BigRandE);
-		int paramdbuffsize = FieldBuf8(&paramd, buff8);
-		BNFromUint8Buf(buff8, paramdbuffsize, &BigD);
-		int orderbuffsize = FieldBuf8(&curve_order, buff8);
-		BNFromUint8Buf(buff8, orderbuffsize, &BigOrder);
-		BigOrder.Length = 10;
-		BNComb10MulTo(&BigD, &R, &R2);
-		BNWordDiv(&R2, &BigOrder, &BigS);
-		BNAdd(&BigS, &BigRandE, &BigS2);
-		BNFromUint8Buf(buff8, orderbuffsize, &BigOrder);
-		BigOrder.Length = 10;
-		BNWordDiv(&BigS2, &BigOrder, &BigS3);
-		BNToBEUint8Array(&BigS3, signatureS);
-		BNToBEUint8Array(&R, signatureR);
-		for (int i = 31; i >= 0; i--)
-		{
-			signatureOut[i] = signatureR[31 - i];
-			signatureOut[i + 32] = signatureS[31 - i];
-		}
-		EXT_UART_Transmit("hash value:\r\n");
-		PrintDebugByteArray(hashvalue, 32);
-		EXT_UART_Transmit("random field value:\r\n");
-		PrintDebugUInt32Array(localerand_bytes, 9, -1);
-		EXT_UART_Transmit("signatureOut value:\r\n");
-		PrintDebugByteArray(signatureOut, 64);
-		PORTD &= ~(1UL << 6);
+	bignumber_t R;
+	bignumber_t R2;
+	bignumber_t BigD;
+	bignumber_t BigRandE;
+	bignumber_t BigOrder;
+	bignumber_t BigS;
+	bignumber_t BigS2;
+	bignumber_t BigS3;
+	
+	uint8_t signatureS[32];
+	uint8_t signatureR[32];
+
+	memset(withzero, 0x00, 33);
+	for (int i = 0; i < 32; i++)
+	{
+		withzero[i + 1] = hashvalue[31 - i];
 	}
+	
+	FieldFromByteArray(withzero, 33, 9, &hash_v);
+
+	while (true) {
+		//erand_bytes[0] = (uint32_t)((uint32_t)0x00 << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
+		for (int i = 0; i < 8; i++)
+		{
+			erand_bytes[i] = (uint32_t)((uint32_t)GetRandomByte() << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
+		}
+		erand_bytes[8] = 0;
+		FieldFromUint32Buf(erand_bytes, 9, &rand_e);
+		if (FieldIs_Less(&rand_e, &curve_order)) {
+			break;
+		}
+	}
+	
+	PointMulPos_Stage1(&basepoint, &rand_e, &eG1);
+	FieldFromUint32Buf(erand_bytes, 9, &rand_e);
+	PointMulPos_Stage2(&rand_e, &eG1, &eG2);
+	FieldMod_Mul(&hash_v, &eG2.x, &r);
+	FieldTruncate(&r, &r2);
+	
+	int r2buffsize = FieldBuf8(&r2, uint8_buffer);
+	BNFromUint8Buf(uint8_buffer, r2buffsize, &R);
+	FieldFromUint32Buf(erand_bytes, 9, &rand_e);
+	int erandbuffsize = FieldBuf8(&rand_e, uint8_buffer);
+	BNFromUint8Buf(uint8_buffer, erandbuffsize, &BigRandE);
+	int paramdbuffsize = FieldBuf8(&paramd, uint8_buffer);
+	BNFromUint8Buf(uint8_buffer, paramdbuffsize, &BigD);
+	int orderbuffsize = FieldBuf8(&curve_order, uint8_buffer);
+	BNFromUint8Buf(uint8_buffer, orderbuffsize, &BigOrder);
+	BigOrder.Length = 10;
+	BNComb10MulTo(&BigD, &R, &R2);
+	BNWordDiv(&R2, &BigOrder, &BigS);
+	BNAdd(&BigS, &BigRandE, &BigS2);
+	BNFromUint8Buf(uint8_buffer, orderbuffsize, &BigOrder);
+	BigOrder.Length = 10;
+	BNWordDiv(&BigS2, &BigOrder, &BigS3);
+	PrintDebugUInt32Array(BigS3.words, BigS3.Length, -1);
+	PrintDebugUInt32Array(R.words, R.Length, -1);
+	BNToBEUint8Array(&BigS3, signatureS);
+	BNToBEUint8Array(&R, signatureR);
+	for (int i = 31; i >= 0; i--)
+	{
+		signatureOut[i] = signatureR[31 - i];
+		signatureOut[i + 32] = signatureS[31 - i];
+	}
+	
+	PORTD &= ~(1UL << 6);
 }

@@ -893,7 +893,11 @@ void BNStrip(bignumber_t * thisnum) {
 void BNToBEUint8Array(bignumber_t * thisnum, uint8_t * res) {
 	int position = 31;
 	uint32_t carry = 0;
-	for (uint32_t i = 0, shift = 0; i < thisnum->Length; i++) {
+	int bnlen = thisnum->Length;
+	while (thisnum->words[bnlen - 1] == 0 && bnlen > 0) {
+		bnlen--;
+	}
+	for (int i = 0, shift = 0; i < bnlen; i++) {
 		uint32_t word = (thisnum->words[i] << shift) | carry;
 
 		res[position--] = word & 0xff;

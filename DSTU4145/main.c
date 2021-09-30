@@ -24,13 +24,13 @@
 #include "Field.h"
 #include "notaxTemplate.h"
 #include "gost89.h"
-//#include "ADCops.h"
+#include "ADCops.h"
 #include "PRNG.h"
 //#include "ConvertHelper.h"
 
 uint8_t ss[54] = { 54, 178, 216, 188, 139, 233, 3, 35, 23, 46, 155, 177, 212, 33, 246, 115, 116, 11, 138, 48, 220, 233, 146, 116, 174, 80, 185, 198, 172, 219, 241, 92, 188, 177, 139, 37, 24, 5, 94, 113, 80, 31, 2, 22, 121, 177, 179, 163, 52, 206, 238, 34, 83, 176 };
 
-uint8_t dsh[32] = { 98, 233, 213, 186, 106, 214, 97, 109, 176, 103, 200, 209, 166, 209, 121, 106, 49, 227, 3, 22, 83, 154, 187, 45, 94, 42, 58, 132, 180, 53, 85, 46 };
+uint8_t dsh[32] = { 245, 74, 219, 226, 95, 117, 161, 48, 210, 215, 140, 181, 188, 206, 104, 196, 112, 211, 132, 105, 117, 148, 226, 163, 100, 200, 226, 105, 243, 70, 167, 159 };
 
 uint8_t msgdigest[32] = { 115, 46, 87, 204, 244, 171, 26, 186, 51, 54, 101, 13, 176, 239, 71, 43, 163, 100, 220, 143, 59, 25, 163, 249, 248, 243, 67, 14, 90, 181, 1, 29 };
 
@@ -50,22 +50,23 @@ int main(void)
 	char buff[64];
 	EXT_UART_Transmit("START PROGRAM\r\n");
 	PRNG_Init();
-	NoTaxPrepareDataToSign(msgdigest);
-	Gost89HashCompute(DataToSign, DataToSignLength);
-	PrintDebugByteArray(gost89Hash_Value, 32);
-	//uint8_t pizda[32];
-	memcpy(hashe, gost89Hash_Value, 32);
-	SignHash(hashe);
+
+	Signer_Setup();
 
 	int cnt = 0;
     /* Replace with your application code */
     while (1) 
     {
-		PORTD ^= 0x40;
-		
-		sprintf(buff, "Hello #%d", cnt++);
+		sprintf(buff, "==== PASS #%d ====\r\n", ++cnt);
 		EXT_UART_Transmit(buff);
-		EXT_CRLF();
+		NoTaxPrepareDataToSign(msgdigest);
+		Gost89HashCompute(DataToSign, DataToSignLength);
+		EXT_UART_Transmit("hash value:\r\n");
+		PrintDebugByteArray(gost89Hash_Value, 32);
+		SignHash(gost89Hash_Value);
+		EXT_UART_Transmit("signatureOut value:\r\n");
+		PrintDebugByteArray(signatureOut, 64);
+		
 		delay_1ms(1000);
     }
 }
