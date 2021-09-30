@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-size_t gost89HashLength;
+int gost89HashLength;
 uint8_t gost89Hash_U[32];
 uint8_t gost89Hash_V[32];
 uint8_t gost89Hash_W[32];
@@ -39,7 +39,7 @@ uint8_t gost89Hash_Value[32];
 uint8_t gost89Hash_Buf[32];
 int32_t gost89Hash_AB2[4];
 uint8_t gost89Hash_Left[64];
-size_t gost89Hash_Leftlength;
+int gost89Hash_Leftlength;
 
 gost89_t gost89;
 
@@ -215,8 +215,8 @@ void gost89Decrypt64_CFB(uint8_t * iv, uint8_t * crypted, uint8_t * outres) {
 	}
 }
 
-void gost89Crypt_CFB(uint8_t * iv, uint8_t * plain, size_t plainlen, uint8_t * resarray) {
-	size_t blocks = ceil(plainlen / 8);
+void gost89Crypt_CFB(uint8_t * iv, uint8_t * plain, int plainlen, uint8_t * resarray) {
+	int blocks = ceil(plainlen / 8);
 	if (blocks == 0)
 	{
 		return;
@@ -232,8 +232,8 @@ void gost89Crypt_CFB(uint8_t * iv, uint8_t * plain, size_t plainlen, uint8_t * r
 	}
 }
 
-void gost89Decrypt_CFB(uint8_t * iv, uint8_t * crypted, size_t cryptedlen, uint8_t * resarray) {
-	size_t blocks = ceil(cryptedlen / 8);
+void gost89Decrypt_CFB(uint8_t * iv, uint8_t * crypted, int cryptedlen, uint8_t * resarray) {
+	int blocks = ceil(cryptedlen / 8);
 	if (blocks == 0)
 	{
 		return;
@@ -249,8 +249,8 @@ void gost89Decrypt_CFB(uint8_t * iv, uint8_t * crypted, size_t cryptedlen, uint8
 	}
 }
 
-void gost89Crypt(uint8_t * iv, uint8_t * plain, size_t plainlen, uint8_t * resarray) {
-	size_t blocks = ceil(plainlen / 8);
+void gost89Crypt(uint8_t * iv, uint8_t * plain, int plainlen, uint8_t * resarray) {
+	int blocks = ceil(plainlen / 8);
 	if (blocks == 0)
 	{
 		return;
@@ -266,8 +266,8 @@ void gost89Crypt(uint8_t * iv, uint8_t * plain, size_t plainlen, uint8_t * resar
 	}
 }
 
-void gost89Decrypt(uint8_t * crypted, size_t cryptedlen, uint8_t * resarray) {
-	size_t blocks = ceil(cryptedlen / 8);
+void gost89Decrypt(uint8_t * crypted, int cryptedlen, uint8_t * resarray) {
+	int blocks = ceil(cryptedlen / 8);
 	if (blocks == 0)
 	{
 		return;
@@ -284,17 +284,17 @@ void gost89Decrypt(uint8_t * crypted, size_t cryptedlen, uint8_t * resarray) {
 }
 
 void gost89Key(uint8_t * k) {
-	size_t j = 0;
-	for (size_t i = 0; i < 8; i++)
+	int j = 0;
+	for (int i = 0; i < 8; i++)
 	{
 		gost89.k[i] = (uint32_t)((uint32_t)k[j] | (((uint32_t)k[j + 1] << 8) | ((uint32_t)k[j + 2] << 16) | ((uint32_t)k[j + 3] << 24)));
 		j += 4;
 	}
 }
 
-size_t gost89MacOut(uint8_t * buf, int nbits, uint8_t * outres) {
-	size_t nbytes = nbits >> 3;
-	size_t rembits = nbits & 7;
+int gost89MacOut(uint8_t * buf, int nbits, uint8_t * outres) {
+	int nbytes = nbits >> 3;
+	int rembits = nbits & 7;
 	uint8_t mask = (rembits > 1) ? ((uint8_t)(1 < rembits) - 1) : 0;
 
 	for (int i = 0; i < nbytes; i++)
@@ -346,12 +346,12 @@ void gost89Mac64(uint8_t * datablock, uint8_t * outres) {
 	outres[7] = (n[1] >> 24);
 }
 
-void gost89Mac(uint8_t * data, size_t datalen, uint8_t * outres) {
+void gost89Mac(uint8_t * data, int datalen, uint8_t * outres) {
 	uint8_t buf[8];
 	for (int i = 0; i < datalen; i += 8)
 	{
 		uint8_t restblock[8];
-		size_t restlen = (datalen - i * 8 >= 8) ? 8 : (datalen - i * 8);
+		int restlen = (datalen - i * 8 >= 8) ? 8 : (datalen - i * 8);
 		memcpy(restblock, &data[i * 8], restlen);
 		gost89Mac64(restblock, buf);
 	}
@@ -385,7 +385,7 @@ void Gost89HashCircle_XOR8(uint8_t * w, uint8_t * k) {
 
 void Gost89HashTransform_3(uint8_t *  data) {
 	int32_t t16 = (int32_t)(data[0] ^ data[2] ^ data[4] ^ data[6] ^ data[24] ^ data[30]) | ((data[1] ^ data[3] ^ data[5] ^ data[7] ^ data[25] ^ data[31]) << 8);
-	for (size_t i = 0; i < 30; i++)
+	for (int i = 0; i < 30; i++)
 	{
 		data[i] = data[i + 2];
 	}
@@ -393,11 +393,11 @@ void Gost89HashTransform_3(uint8_t *  data) {
 	data[31] = t16 >> 8;
 }
 
-int32_t Gost89HashAddBlocks(size_t n, uint8_t * left, uint8_t * right) {
+int32_t Gost89HashAddBlocks(int n, uint8_t * left, uint8_t * right) {
 	gost89Hash_AB2[2] = 0;
 	gost89Hash_AB2[3] = 0;
 
-	for (size_t i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 	{
 		gost89Hash_AB2[0] = left[i];
 		gost89Hash_AB2[1] = right[i];
@@ -408,8 +408,8 @@ int32_t Gost89HashAddBlocks(size_t n, uint8_t * left, uint8_t * right) {
 	return gost89Hash_AB2[3];
 }
 
-void Gost89HashXorBlocks(uint8_t * ret, uint8_t * a, size_t alen, uint8_t * b) {
-	for (size_t i = 0; i < alen; i++)
+void Gost89HashXorBlocks(uint8_t * ret, uint8_t * a, int alen, uint8_t * b) {
+	for (int i = 0; i < alen; i++)
 	{
 		ret[i] = (a[i] ^ b[i]);
 	}
@@ -445,24 +445,24 @@ void Gost89HashStep(uint8_t * h, uint8_t  * Curve_m) {
 	Gost89HashSwapBytes(gost89Hash_W, gost89_Key);
 	gost89Key(gost89_Key);
 	gost89Crypt64(&h[24], &gost89Hash__S[24]);
-	for (size_t i = 0; i < 12; i++)
+	for (int i = 0; i < 12; i++)
 	{
 		Gost89HashTransform_3(gost89Hash__S);
 	}
 	Gost89HashXorBlocks(gost89Hash__S, gost89Hash__S, 32, Curve_m);
 	Gost89HashTransform_3(gost89Hash__S);
 	Gost89HashXorBlocks(gost89Hash__S, gost89Hash__S, 32, h);
-	for (size_t i = 0; i < 61; i++)
+	for (int i = 0; i < 61; i++)
 	{
 		Gost89HashTransform_3(gost89Hash__S);
 	}
-	for (size_t i = 0; i < 32; i++)
+	for (int i = 0; i < 32; i++)
 	{
 		gost89Hash_Value[i] = gost89Hash__S[i];
 	}
 }
 
-void Gost89HashUpdate(uint8_t * block, size_t blocklen) {
+void Gost89HashUpdate(uint8_t * block, int blocklen) {
 	if (gost89Hash_Leftlength > 0)
 	{
 		gost89Hash_Leftlength = gost89Hash_Leftlength + blocklen;
@@ -494,8 +494,8 @@ void Gost89HashUpdate32(uint8_t * block32) {
 }
 
 void Gost89HashFinish() {
-	size_t fin_len = gost89HashLength;
-	size_t idx = 0;
+	int fin_len = gost89HashLength;
+	int idx = 0;
 	if (gost89Hash_Leftlength > 0)
 	{
 		for (idx = 0; idx < gost89Hash_Leftlength; idx++)
@@ -531,7 +531,7 @@ void Gost89HashReset() {
 	gost89HashLength = 0;
 }
 
-void Gost89HashDumb_KDF(uint8_t * input, size_t inputlen, size_t n_passes) {
+void Gost89HashDumb_KDF(uint8_t * input, int inputlen, int n_passes) {
 	Gost89HashUpdate(input, inputlen);
 	Gost89HashFinish();
 	uint8_t hash[32];
@@ -551,17 +551,17 @@ void Gost89HashDumb_KDF(uint8_t * input, size_t inputlen, size_t n_passes) {
 	}
 }
 
-void Gost89HashPB_KDF(uint8_t * input, size_t inputlen, uint8_t * salt, size_t saltlen, size_t iterations, uint8_t * reskey) {
+void Gost89HashPB_KDF(uint8_t * input, int inputlen, uint8_t * salt, int saltlen, int iterations, uint8_t * reskey) {
 	memset(reskey, 0x00, 32);
 	uint8_t pw_pad36[32];
 	uint8_t pw_pad5C[32];
 	uint8_t ins[4] = { 0,0,0,1 };
-	for (size_t k = 0; k < 32; k++)
+	for (int k = 0; k < 32; k++)
 	{
 		pw_pad36[k] = 0x36;
 		pw_pad5C[k] = 0x5C;
 	}
-	for (size_t k=0; k < inputlen; k++) {
+	for (int k=0; k < inputlen; k++) {
 		pw_pad36[k] ^= input[k];
 		pw_pad5C[k] ^= input[k];
 	}
@@ -578,7 +578,7 @@ void Gost89HashPB_KDF(uint8_t * input, size_t inputlen, uint8_t * salt, size_t s
 
 	iterations--;
 
-	for (size_t k = 0; k < 32; k++)
+	for (int k = 0; k < 32; k++)
 	{
 		reskey[k] = gost89Hash_Value[k];
 	}
@@ -595,18 +595,18 @@ void Gost89HashPB_KDF(uint8_t * input, size_t inputlen, uint8_t * salt, size_t s
 		Gost89HashUpdate32(gost89Hash_Value);
 		Gost89HashFinish();
 
-		for (size_t k = 0; k < 32; k++)
+		for (int k = 0; k < 32; k++)
 		{
 			reskey[k] ^= gost89Hash_Value[k];
 		}
 	}
 }
 
-//void Gost89ConvertPassword(uint8_t * pw, size_t pwlen) {
+//void Gost89ConvertPassword(uint8_t * pw, int pwlen) {
 	//Gost89HashDumb_KDF(pw, pwlen, 10000);
 //}
 
-void gost89DecodeData(uint8_t * crypted, size_t cryptlen, uint8_t * pw, size_t pwlen, uint8_t * plain) {
+void gost89DecodeData(uint8_t * crypted, int cryptlen, uint8_t * pw, int pwlen, uint8_t * plain) {
 	Gost89HashZeroAll();
 	gost89_init(0);
 	Gost89HashDumb_KDF(pw, pwlen, 10000);
@@ -617,7 +617,7 @@ void gost89DecodeData(uint8_t * crypted, size_t cryptlen, uint8_t * pw, size_t p
 	//PrintDebugByteArray(plain, cryptlen);
 }
 
-void Gost89HashCompute(uint8_t * data, size_t datalen) {
+void Gost89HashCompute(uint8_t * data, int datalen) {
 	Gost89HashZeroAll();
 	gost89_init(0);
 	Gost89HashUpdate(data, datalen);

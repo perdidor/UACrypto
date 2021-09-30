@@ -93,7 +93,7 @@ void Signer_Setup() {
 }
 
 void SignHash(uint8_t * hashvalue) {
-	PORTD |= (1UL << 6);
+	PORTD &= ~(1UL << 6);
 	field_t hash_v;
 	field_t r;
 	field_t r2;
@@ -156,8 +156,8 @@ void SignHash(uint8_t * hashvalue) {
 	BNFromUint8Buf(uint8_buffer, orderbuffsize, &BigOrder);
 	BigOrder.Length = 10;
 	BNWordDiv(&BigS2, &BigOrder, &BigS3);
-	PrintDebugUInt32Array(BigS3.words, BigS3.Length, -1);
-	PrintDebugUInt32Array(R.words, R.Length, -1);
+	//PrintDebugUInt32Array(BigS3.words, BigS3.Length, -1);
+	//PrintDebugUInt32Array(R.words, R.Length, -1);
 	BNToBEUint8Array(&BigS3, signatureS);
 	BNToBEUint8Array(&R, signatureR);
 	for (int i = 31; i >= 0; i--)
