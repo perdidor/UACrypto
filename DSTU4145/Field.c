@@ -13,6 +13,7 @@
 #include "PRNG.h"
 #include "PrivateKey.h"
 #include "USART.h"
+#include "LEDC.h"
 #include <math.h>
 #include <avr/io.h>
 #include <stdio.h>
@@ -26,7 +27,7 @@
 #include <stdbool.h>
 
 void FieldFromCurve(field_t * newfield) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	memset(newfield->bytes, 0x00, 22 * sizeof(uint32_t));
 	newfield->length = Priv_mod_words;
 	newfield->_is_field = true;
@@ -38,7 +39,7 @@ void FieldFromHexStr(char * in_value, field_t * newfield) {
 }
 
 void FieldFromByteArray(uint8_t * in_value, int len, int max_size, field_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	memset(res->bytes, 0x00, 22 * sizeof(uint32_t));
 	int code = 0;
 	int bpos = 0;
@@ -66,7 +67,7 @@ void FreeField(field_t * field) {
 }
 
 void FieldFromUint32Buf(uint32_t * in_value, int len, field_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	res->length = len;
 	memset(&res->bytes[0], 0x00, 22 * sizeof(uint32_t));
 	memcpy(&res->bytes[0], &in_value[0], res->length * sizeof(uint32_t));
@@ -76,7 +77,7 @@ void FieldFromUint32Buf(uint32_t * in_value, int len, field_t * res) {
 uint32_t FieldMod_Mul_s2[9] = { 0,0,0,0,0,0,0,0,0 };
 
 void FieldMod_Mul(field_t * thisfield, field_t * thatfield, field_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	uint32_t s[22];
 	memcpy(&s[0], &Curve_mod_tmp[0], sizeof(uint32_t) * 22);
 	g2fmfmul(thisfield->bytes, thisfield->length, thatfield->bytes, thatfield->length, s, 22);
@@ -89,7 +90,7 @@ void FieldMod_Sqr(field_t * thisfield, field_t * res) {
 }
 
 void FieldAddM(field_t * thisfield, field_t * thatfield, uint32_t * _from, int fromlen) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	uint32_t that_b[20];
 	uint32_t this_b[20];
 	uint32_t to_b[20];
@@ -125,13 +126,13 @@ void FieldAddM(field_t * thisfield, field_t * thatfield, uint32_t * _from, int f
 }
 
 void FieldAdd(field_t * thisfield, field_t * thatfield, field_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	FieldFromCurve(res);
 	FieldAddM(res, thatfield, thisfield->bytes, thisfield->length);
 }
 
 bool FieldIs_Zero(field_t * field) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	int blen = field->length;
 	bool res = true;
 	for(int idx = 0; idx < blen; idx++)
@@ -142,7 +143,7 @@ bool FieldIs_Zero(field_t * field) {
 }
 
 bool FieldEquals(field_t * thisfield, field_t * thatfield) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	int blen = thisfield->length;
 	int olen = thatfield->length;
 	bool res = true;
@@ -160,7 +161,7 @@ bool FieldEquals(field_t * thisfield, field_t * thatfield) {
 }
 
 bool FieldIs_Less(field_t * thisfield, field_t * thatfield) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	int blen = thisfield->length;
 	int olen = thatfield->length;
 	while(thatfield->bytes[olen - 1] == 0 && olen >= 1) olen--;
@@ -178,12 +179,12 @@ bool FieldIs_Less(field_t * thisfield, field_t * thatfield) {
 }
 
 uint32_t FieldBitLength(field_t * field) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	return g2fmblength(&field->bytes[0], field->length);
 }
 
 bool FieldTestBit(uint32_t n, field_t * field) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	int test_word = floor(n / 32);
 	int test_bit = n % 32;
 	if (test_word < 0 || test_word > field->length) {
@@ -196,12 +197,12 @@ bool FieldTestBit(uint32_t n, field_t * field) {
 }
 
 void FieldClone(field_t * thatfield, field_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	FieldFromUint32Buf(thatfield->bytes, thatfield->length, res);
 }
 
 void FieldClearBit(field_t * field, uint32_t n) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	int test_word = floor(n / 32);
 	int test_bit = n % 32;
 	//int mask = (1 << test_bit);
@@ -215,7 +216,7 @@ void FieldClearBit(field_t * field, uint32_t n) {
 }
 
 void FieldSetBit(field_t * field, uint32_t n) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	int test_word = floor(n / 32);
 	int test_bit = n % 32;
 	int mask = 1 << test_bit;
@@ -227,14 +228,14 @@ void FieldSetBit(field_t * field, uint32_t n) {
 }
 
 void FieldShiftRight(field_t * field, uint32_t n, field_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	if (n == 0) FieldClone(field, res);
 	g2fmshiftRight(field->bytes, field->length, n);
 	FieldFromUint32Buf(field->bytes, field->length, res);
 }
 
 void FieldShiftRightM(field_t * field, uint32_t n) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	if (n == 0) return;
 	g2fmshiftRight(field->bytes, field->length, n);
 }
@@ -270,7 +271,7 @@ int FieldBuf8(field_t * field, uint8_t * buf) {
 //}
 
 uint8_t FieldTrace(field_t * field) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	uint32_t bitm_l = Curve_m;
 	field_t * rv = malloc(sizeof(field_t));
 	FieldClone(field, rv);
@@ -283,7 +284,7 @@ uint8_t FieldTrace(field_t * field) {
 }
 
 void FieldInvert(field_t * field, field_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	uint32_t p[9];
 	uint32_t a[10];
 	uint32_t tmpres[10];
@@ -294,7 +295,7 @@ void FieldInvert(field_t * field, field_t * res) {
 }
 
 void FieldTruncate(field_t * field, field_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	field_t tmporderfield;
 	FieldFromUint32Buf(Curve_field_order, 17, &tmporderfield);
 	uint32_t bitl_o = FieldBitLength(&tmporderfield);
@@ -318,7 +319,7 @@ void FieldTruncate(field_t * field, field_t * res) {
 		//return;
 	//}
 	//while (true) {
-		//PORTD ^= 0x40;
+		//SIGN_ACT_TOGGLE()
 		////randarray[0] = ((uint32_t)0x00 << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
 		//for (int i = 0; i < 8; i++)
 		//{
@@ -332,7 +333,7 @@ void FieldTruncate(field_t * field, field_t * res) {
 //}
 
 field_t * FieldCompress(point_t * point) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	field_t * x_inv = malloc(sizeof(field_t));
 	FieldInvert(&point->x, x_inv);
 	field_t * tmp = malloc(sizeof(field_t));

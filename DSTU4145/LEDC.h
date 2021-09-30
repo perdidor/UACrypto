@@ -1,0 +1,29 @@
+/*
+ * LEDC.h
+ *
+ * Created: 30.09.2021 19:42:43
+ *  Author: root
+ */ 
+
+
+#ifndef LEDC_H_
+#define LEDC_H_
+
+#include <avr/io.h>
+
+#define SIGN_ACT_LED_PORT	PORTD
+#define GOST_ACT_LED_PORT	PORTD
+
+#define SIGN_ACT_LED_PORTPIN	PORTD6
+#define GOST_ACT_LED_PORTPIN	PORTD5
+
+#define SIGN_ACT_ON()	(SIGN_ACT_LED_PORT |= (1UL << SIGN_ACT_LED_PORTPIN))
+#define SIGN_ACT_TOGGLE()	(SIGN_ACT_LED_PORT ^= (1UL << SIGN_ACT_LED_PORTPIN))
+#define SIGN_ACT_OFF()	(SIGN_ACT_LED_PORT &= ~(1UL << SIGN_ACT_LED_PORTPIN))
+
+#define GOST_ACT_ON()	(SIGN_ACT_LED_PORT |= (1UL << GOST_ACT_LED_PORTPIN))
+#define GOST_ACT_TOGGLE()	(SIGN_ACT_LED_PORT ^= (1UL << GOST_ACT_LED_PORTPIN))
+#define GOST_ACT_OFF()	(SIGN_ACT_LED_PORT &= ~(1UL << GOST_ACT_LED_PORTPIN))
+
+
+#endif /* LEDC_H_ */

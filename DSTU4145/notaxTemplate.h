@@ -20,10 +20,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-const uint8_t NoTaxTemplate1_63[63];
-const uint8_t NoTaxTemplate2_2458[451];
-const uint8_t NoTaxTemplate3_30[30];
-const uint8_t NoTaxTemplate4_81[81];
+//const uint8_t NoTaxTemplate1_63[63];
+//const uint8_t NoTaxTemplate2_2458[451];
+//const uint8_t NoTaxTemplate3_30[30];
+//const uint8_t NoTaxTemplate4_81[81];
 
 
 const size_t NoTaxTotalLengthInitValue;

@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include "PrivateKey.h"
 #include "USART.h"
+#include "LEDC.h"
 
 void PointConstructor(field_t * input_x, field_t * input_y, point_t * res) {
 	field_t p_x;
@@ -37,13 +38,13 @@ void PointConstructor(field_t * input_x, field_t * input_y, point_t * res) {
 }
 
 void PointCopy(point_t * from, point_t * to) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	FieldFromUint32Buf(from->x.bytes, from->x.length, &to->x);
 	FieldFromUint32Buf(from->y.bytes, from->y.length, &to->y);
 }
 
 void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	field_t param_a, tmp2, invertedtmp, lbdtmp, y0, y1, tmp, invertedx1, tmpy1, y2, tmpx, lbd, x2, x0, x1, tmplbd;
 	uint32_t x0bytes[10];
 	uint32_t x1bytes[10];
@@ -122,13 +123,13 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 }
 
 bool PointIsZero(point_t * point) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	return (FieldIs_Zero(&point->x) && FieldIs_Zero(&point->y));
 }
 
 
 void PointTwice(point_t * point, point_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	point_t tmp;
 	point_t tmp2;
 	PointCopy(point, &tmp);
@@ -137,7 +138,7 @@ void PointTwice(point_t * point, point_t * res) {
 }
 
 void PointTimesPow2(point_t * point, uint16_t n, point_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	point_t tmp;
 	point_t tmp2;
 	PointCopy(point, &tmp);
@@ -151,7 +152,7 @@ void PointTimesPow2(point_t * point, uint16_t n, point_t * res) {
 }
 
 void PointTwicePlus(point_t * thispoint, point_t * thatpoint, point_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	point_t PointTwicePlusthistmp1;
 	point_t PointTwicePlusthistmp2;
 	point_t PointTwicePlusthattmp;
@@ -166,7 +167,7 @@ void PointTwicePlus(point_t * thispoint, point_t * thatpoint, point_t * res) {
 }
 
 void PointMulPos_Stage2_Loop(int32_t wi, point_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	point_t r;
 	point_t tmp2;
 	int32_t digit = wi >> 16;
@@ -186,7 +187,7 @@ void PointMulPos_Stage2_Loop(int32_t wi, point_t * res) {
 }
 
 void PointMulPos_Stage2(field_t * big_k, point_t * stage1res, point_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	point_t r;
 	point_t tmp;
 	int32_t wi = 0;
@@ -219,7 +220,7 @@ void PointMulPos_Stage2(field_t * big_k, point_t * stage1res, point_t * res) {
 }
 
 void PointMulPos_Stage1(point_t * point, field_t * big_k, point_t * res) {
-	PORTD ^= 0x40;
+	SIGN_ACT_TOGGLE();
 	uint32_t bigkbl = FieldBitLength(big_k);
 	uint32_t width = getWindowSize(bigkbl);
 	width = width < 16 ?
@@ -263,5 +264,6 @@ void PointMulPos_Stage1(point_t * point, field_t * big_k, point_t * res) {
 }
 
 bool PointEquals(point_t * p1, point_t * p2) {
+	SIGN_ACT_TOGGLE();
 	return (FieldEquals(&p1->x, &p2->x) && FieldEquals(&p1->y, &p2->y));
 }

@@ -5,7 +5,7 @@
  *  Author: root
  */ 
 #include "notaxTemplate.h"
-
+#include "LEDC.h"
 #include <math.h>
 #include <avr/io.h>
 #include <stdio.h>
@@ -16,38 +16,6 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdint.h>
-
-void NoTaxPrepareTemplate(size_t rawDataLength, uint8_t * timestamp, uint8_t * hashvalue, uint8_t * signature) {
-	//NoTaxTemplate1_63[45] = (rawDataLength + NoTaxElem3LengthInitValue) & 0xff;
-	//NoTaxTemplate1_63[44] = ((rawDataLength + NoTaxElem3LengthInitValue) >> 8) & 0xff;
-//
-	//NoTaxTemplate1_63[22] = (rawDataLength + NoTaxElem2LengthInitValue) & 0xff;
-	//NoTaxTemplate1_63[21] = ((rawDataLength + NoTaxElem2LengthInitValue) >> 8) & 0xff;
-//
-	//NoTaxTemplate1_63[18] = (rawDataLength + NoTaxElem1LengthInitValue) & 0xff;
-	//NoTaxTemplate1_63[17] = ((rawDataLength + NoTaxElem1LengthInitValue) >> 8) & 0xff;
-//
-	//NoTaxTemplate1_63[3] = (rawDataLength + NoTaxTotalLengthInitValue) & 0xff;
-	//NoTaxTemplate1_63[2] = ((rawDataLength + NoTaxTotalLengthInitValue) >> 8) & 0xff;
-
-	//memcpy(&NoTaxTemplate4_81[17], signature, 64);
-	//memcpy(&NoTaxTemplate3_30[17], timestamp, 12);
-	//memcpy(&NoTaxTemplate2_2458[2426], hashvalue, 32);
-}
-
-void NoTaxPrepareDataToSign(uint8_t * hashvalue) {
-	memset(DataToSign, 0x00, DataToSignLength);
-	memcpy(DataToSign, dtspreamble, 25);
-	for (int i = NoTaxTemplate2_certv2offset; i < NoTaxTemplate2_certv2offset + 376; i++)
-	{
-		DataToSign[25 + i] = pgm_read_byte(&(NoTaxTemplate2_2458[i]));
-	}
-	//memcpy(&DataToSign[25], pgm_read_byte(&NoTaxTemplate2_2458[NoTaxTemplate2_certv2offset]), 376);
-	memcpy(&DataToSign[401], dtspreamble2, 43);
-	memcpy(&DataToSign[444], hashvalue, 32);
-	memcpy(&DataToSign[476], dtspreamble3, 15);
-	memcpy(&DataToSign[491], dts_timestamp, 15);
-}
 
 //	add this to unsigned data length and place result as bytes to Template1_63 at pos 2-3 prior sending!!!
 const size_t NoTaxTotalLengthInitValue = 2630;
@@ -74,7 +42,7 @@ size_t NoTaxTemplate2_certv2offset = 0;
 
 //	must be changed according to unsigned data length before sending out
 //	must be followed with unsigned data array
-const PROGMEM uint8_t NoTaxTemplate1_63[63] = {
+const uint8_t NoTaxTemplate1_63[63] PROGMEM = {
 	0x30, 0x82, 0x00, 0x00, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D,
 	0x01, 0x07, 0x02, 0xA0, 0x82, 0x00, 0x00, 0x30, 0x82, 0x00, 0x00, 0x02,
 	0x01, 0x01, 0x31, 0x0E, 0x30, 0x0C, 0x06, 0x0A, 0x2A, 0x86, 0x24, 0x02,
@@ -84,7 +52,7 @@ const PROGMEM uint8_t NoTaxTemplate1_63[63] = {
 };
 
 //	last 32 bytes must be filled with unsigned data gost89 hash byte array[32]
-const PROGMEM uint8_t NoTaxTemplate2_2458[451] = {
+const uint8_t NoTaxTemplate2_2458[451] PROGMEM = {
 	0x30, 0x82, 0x01, 0x74, 0x30, 0x82, 0x01, 0x70, 0x30,
 	0x82, 0x01, 0x6C, 0x30, 0x0C, 0x06, 0x0A, 0x2A, 0x86, 0x24, 0x02, 0x01,
 	0x01, 0x01, 0x01, 0x02, 0x01, 0x04, 0x20, 0x55, 0x85, 0xB3, 0x7C, 0x7A,
@@ -126,14 +94,14 @@ const PROGMEM uint8_t NoTaxTemplate2_2458[451] = {
 };
 
 //	last 13 bytes must be filled with UTC datetime byte array[y1, y2, M1, M2, d1, d2, h1, h2, m1, m2, s1, s2, 0x5a]
-const PROGMEM uint8_t NoTaxTemplate3_30[30] = {
+const uint8_t NoTaxTemplate3_30[30] PROGMEM = {
 	0x30, 0x1C, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09,
 	0x05, 0x31, 0x0F, 0x17, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x5A
 };
 
 //	last 64 bytes must be filled with DSTU4145 signature byte array[64]
-const PROGMEM uint8_t NoTaxTemplate4_81[81] = {
+const uint8_t NoTaxTemplate4_81[81] PROGMEM = {
 	0x30, 0x0D, 0x06, 0x0B, 0x2A, 0x86, 0x24, 0x02, 0x01, 0x01, 0x01, 0x01,
 	0x03, 0x01, 0x01, 0x04, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -142,3 +110,37 @@ const PROGMEM uint8_t NoTaxTemplate4_81[81] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
+void NoTaxPrepareTemplate(size_t rawDataLength, uint8_t * timestamp, uint8_t * hashvalue, uint8_t * signature) {
+	//NoTaxTemplate1_63[45] = (rawDataLength + NoTaxElem3LengthInitValue) & 0xff;
+	//NoTaxTemplate1_63[44] = ((rawDataLength + NoTaxElem3LengthInitValue) >> 8) & 0xff;
+//
+	//NoTaxTemplate1_63[22] = (rawDataLength + NoTaxElem2LengthInitValue) & 0xff;
+	//NoTaxTemplate1_63[21] = ((rawDataLength + NoTaxElem2LengthInitValue) >> 8) & 0xff;
+//
+	//NoTaxTemplate1_63[18] = (rawDataLength + NoTaxElem1LengthInitValue) & 0xff;
+	//NoTaxTemplate1_63[17] = ((rawDataLength + NoTaxElem1LengthInitValue) >> 8) & 0xff;
+//
+	//NoTaxTemplate1_63[3] = (rawDataLength + NoTaxTotalLengthInitValue) & 0xff;
+	//NoTaxTemplate1_63[2] = ((rawDataLength + NoTaxTotalLengthInitValue) >> 8) & 0xff;
+
+	//memcpy(&NoTaxTemplate4_81[17], signature, 64);
+	//memcpy(&NoTaxTemplate3_30[17], timestamp, 12);
+	//memcpy(&NoTaxTemplate2_2458[2426], hashvalue, 32);
+}
+
+void NoTaxPrepareDataToSign(uint8_t * hashvalue) {
+	SIGN_ACT_ON();
+	memset(DataToSign, 0x00, DataToSignLength);
+	memcpy(DataToSign, dtspreamble, 25);
+	for (int i = NoTaxTemplate2_certv2offset; i < NoTaxTemplate2_certv2offset + 376; i++)
+	{
+		DataToSign[25 + i] = pgm_read_byte(&(NoTaxTemplate2_2458[i]));
+	}
+	//memcpy(&DataToSign[25], pgm_read_byte(&NoTaxTemplate2_2458[NoTaxTemplate2_certv2offset]), 376);
+	memcpy(&DataToSign[401], dtspreamble2, 43);
+	memcpy(&DataToSign[444], hashvalue, 32);
+	memcpy(&DataToSign[476], dtspreamble3, 15);
+	memcpy(&DataToSign[491], dts_timestamp, 15);
+	SIGN_ACT_OFF();
+}

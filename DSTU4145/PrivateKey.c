@@ -27,6 +27,7 @@
 #include "gost89.h"
 #include "ADCops.h"
 #include "PRNG.h"
+#include "LEDC.h"
 
 uint32_t Priv_param_d[8] = { 2082397019, 1468370442, 823178231, 2862269997, 2052372100, 4252500519, 3735157276, 574723566 };
 
@@ -93,7 +94,6 @@ void Signer_Setup() {
 }
 
 void SignHash(uint8_t * hashvalue) {
-	PORTD &= ~(1UL << 6);
 	field_t hash_v;
 	field_t r;
 	field_t r2;
@@ -166,5 +166,5 @@ void SignHash(uint8_t * hashvalue) {
 		signatureOut[i + 32] = signatureS[31 - i];
 	}
 	
-	PORTD &= ~(1UL << 6);
+	SIGN_ACT_OFF();
 }
