@@ -166,16 +166,10 @@ bool FieldIs_Less(field_t * thisfield, field_t * thatfield) {
 	int olen = thatfield->length;
 	while(thatfield->bytes[olen - 1] == 0 && olen >= 1) olen--;
 	while(thisfield->bytes[blen - 1] == 0 && blen >= 1) blen--;
-	if (olen != blen) {
-		return olen > blen;
+	if (olen > blen) {
+		return false;
 	}
-	if (blen == 0) {
-		return true;
-	} else
-	{
-		blen--;
-	}
-	return thatfield->bytes[blen] > thisfield->bytes[blen];
+	return !(thatfield->bytes[blen] < thisfield->bytes[blen]);
 }
 
 uint32_t FieldBitLength(field_t * field) {

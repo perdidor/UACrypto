@@ -126,7 +126,6 @@ void SignHash(uint8_t * hashvalue) {
 	FieldFromByteArray(withzero, 33, 9, &hash_v);
 
 	while (true) {
-		//erand_bytes[0] = (uint32_t)((uint32_t)0x00 << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
 		for (int i = 0; i < 8; i++)
 		{
 			erand_bytes[i] = (uint32_t)((uint32_t)GetRandomByte() << 24) | ((uint32_t)GetRandomByte() << 16) | ((uint32_t)GetRandomByte() << 8) | (uint32_t)GetRandomByte();
@@ -160,8 +159,6 @@ void SignHash(uint8_t * hashvalue) {
 	BNFromUint8Buf(uint8_buffer, orderbuffsize, &BigOrder);
 	BigOrder.Length = 10;
 	BNWordDiv(&BigS2, &BigOrder, &BigS3);
-	//PrintDebugUInt32Array(BigS3.words, BigS3.Length, -1);
-	//PrintDebugUInt32Array(R.words, R.Length, -1);
 	BNToBEUint8Array(&BigS3, signatureS);
 	BNToBEUint8Array(&R, signatureR);
 	for (int i = 31; i >= 0; i--)
