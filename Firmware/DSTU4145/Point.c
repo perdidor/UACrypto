@@ -93,8 +93,8 @@ void PointAdd(point_t * thispoint, point_t * p1, point_t * res) {
 		if (!FieldEquals(&y0, &y1) || FieldIs_Zero(&p1->x)) {
 			res->x.length = 1;
 			res->y.length = 1;
-			memset(res->x.bytes, 0x00, 32 * sizeof(uint32_t));
-			memset(res->x.bytes, 0x00, 32 * sizeof(uint32_t));
+			memset(res->x.bytes, 0x00, 22 * sizeof(uint32_t));
+			memset(res->x.bytes, 0x00, 22 * sizeof(uint32_t));
 			return;
 		};
 		FieldInvert(&p1->x, &invertedx1);
@@ -238,7 +238,7 @@ void PointMulPos_Stage1(point_t * point, field_t * big_k, point_t * res) {
 	if (PointMulPosTimes > 1) {
 		int n = abs(digit);
 		if ((n << 2) < (1 << width)) {
-			size_t highest = bitLengths[n];
+			size_t highest = WNAFBitLengths[n];
 			size_t scale = width - highest;
 			size_t lowBits =  n ^ (1 << (highest - 1));
 

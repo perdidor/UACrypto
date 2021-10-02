@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-uint8_t bitLengths[256] = {
+uint8_t WNAFBitLengths[256] = {
 	0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
 	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
 	6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,

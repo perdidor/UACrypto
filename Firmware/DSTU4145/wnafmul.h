@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-uint8_t bitLengths[256];
+uint8_t WNAFBitLengths[256];
 
 //void PointPrecomp(point_t * point, uint32_t width);
 
