@@ -180,14 +180,12 @@ uint32_t FieldBitLength(field_t * field) {
 bool FieldTestBit(uint32_t n, field_t * field) {
 	SIGN_ACT_TOGGLE();
 	int test_word = floor(n / 32);
-	int test_bit = n % 32;
+	uint32_t test_bit = n % 32;
 	if (test_word < 0 || test_word > field->length) {
 		return true;
 	}
-	uint32_t word = field->bytes[test_word];
-	int mask = 1 << test_bit;
 
-	return (word & mask) != 0;
+	return (((field->bytes[test_word] >> test_bit) & 0x01) == 1);
 }
 
 void FieldClone(field_t * thatfield, field_t * res) {

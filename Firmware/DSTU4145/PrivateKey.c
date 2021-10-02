@@ -77,7 +77,7 @@ precomp_set_t PreComputedPoints = {
 //	все числа большой длины переводить в байтовые массивы, передавать на чип и хранить как массивы UInt32 - весь алгоритм построен на этом
 //	хранение\замена ключа и шаблона подписанного файла - единственное что осталось сделать, хеширование и подпись работают, проверено неоднократно.
 
-uint32_t erand_bytes[9] = { 3277242873, 3566179612, 3795762460, 3713345829, 129772583, 2948162565, 1839007167, 4081444450, 0 };
+uint32_t erand_bytes[9] = { 3869207214, 962576676, 1912593429, 1195418971, 621451288, 270478090, 300348445, 3826406188, 0 };
 
 uint8_t signatureOut[64];
 
@@ -137,8 +137,8 @@ void SignHash(uint8_t * hashvalue) {
 		}
 	}
 	
-	//EXT_UART_Transmit("Random value:\r\n");
-	//PrintDebugUInt32Array(rand_e.bytes, 9, -1);
+	EXT_UART_Transmit("Random value:\r\n");
+	PrintDebugUInt32Array(rand_e.bytes, 9, -1);
 	
 	PointMulPos_Stage1(&basepoint, &rand_e, &eG1);
 	FieldFromUint32Buf(erand_bytes, 9, &rand_e);
@@ -164,10 +164,10 @@ void SignHash(uint8_t * hashvalue) {
 	BNWordDiv(&BigS2, &BigOrder, &BigS3);
 	BNToBEUint8Array(&BigS3, signatureS);
 	BNToBEUint8Array(&R, signatureR);
-	//EXT_UART_Transmit("R value:\r\n");
-	//PrintDebugUInt32Array(R.words, 9, -1);
-	//EXT_UART_Transmit("S value:\r\n");
-	//PrintDebugUInt32Array(BigS3.words, 9, -1);
+	EXT_UART_Transmit("R value:\r\n");
+	PrintDebugUInt32Array(R.words, 9, -1);
+	EXT_UART_Transmit("S value:\r\n");
+	PrintDebugUInt32Array(BigS3.words, 9, -1);
 	for (int i = 31; i >= 0; i--)
 	{
 		signatureOut[i] = signatureR[31 - i];

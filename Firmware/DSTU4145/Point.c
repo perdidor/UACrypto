@@ -201,7 +201,7 @@ void PointMulPos_Stage2(field_t * big_k, point_t * stage1res, point_t * res) {
 	width = width < 16 ?
 	(width > 2 ? width : 16) : 2;
 
-	uint32_t PointMulPosTimes = (uint32_t)windowNaf(width, big_k, localresarr) - 1;
+	uint32_t PointMulPosTimes = windowNaf(width, big_k, localresarr) - 1;
 
 	while (PointMulPosTimes > 0)
 	{

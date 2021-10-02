@@ -27,7 +27,7 @@ int windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
 	field_t f;
 	FieldClone(field, &f);
 	uint32_t f_len = FieldBitLength(&f);
-	uint32_t ret_len = floor(f_len / width + 1);
+	//uint32_t ret_len = floor(f_len / width + 1);
 	//resarray = malloc(ret_len * sizeof(int32_t));
 	uint32_t pow2 = 1 << width;
 	uint32_t masbigint = pow2 - 1;
@@ -37,7 +37,7 @@ int windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
 	int32_t length = 0, pos = 0;
 	int32_t digit = 0, zeroes = 0;
 
-	while (pos <= f_len && length < ret_len)
+	while (pos <= f_len)
 	{
 		if (FieldTestBit(pos, &f) == carry)
 		{
