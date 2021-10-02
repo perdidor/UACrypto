@@ -6,8 +6,9 @@
  */ 
 #include "gf2m.h"
 #include "wnaf.h"
+#include "Field.h"
 #include "dstu_types.h"
-#include "Curve.h"
+//#include "Curve.h"
 #include <math.h>
 #include <avr/io.h>
 #include <stdio.h>
@@ -70,7 +71,7 @@ int windowNaf(uint32_t width, field_t * field, int32_t * resarray) {
 	//}
 
 	return length;
-	FreeField(&f);
+	//FreeField(&f);
 }
 
 uint32_t getWindowSize(uint32_t bits) {

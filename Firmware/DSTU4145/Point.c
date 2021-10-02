@@ -7,7 +7,7 @@
 #include "Point.h"
 #include "Field.h"
 #include "wnaf.h"
-#include "Curve.h"
+//#include "Curve.h"
 #include "dstu_types.h"
 #include "wnafmul.h"
 #include <math.h>
@@ -255,7 +255,7 @@ void PointMulPos_Stage1(point_t * point, field_t * big_k, point_t * res) {
 		} else
         {
 			FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[n >> 1].x, 9, &R.x);
-			FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[n >> 1].x, 9, &R.y);
+			FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[n >> 1].y, 9, &R.y);
         }
 
 		PointTimesPow2(&R, zeroes, res);

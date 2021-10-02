@@ -33,7 +33,7 @@ void PRNG_Init() {
 		rand_seed += ADC_GetEntropy();
 	}
 	srand(rand_seed);
-	char buff[32];
-	sprintf(buff, "Rand seed %u\r\n", rand_seed);
-	EXT_UART_Transmit(buff);
+	//char buff[32];
+	//sprintf(buff, "Rand seed %u\r\n", rand_seed);
+	//EXT_UART_Transmit(buff);
 }

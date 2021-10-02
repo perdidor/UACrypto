@@ -6,7 +6,7 @@
  */ 
 #include "dstu_types.h"
 #include "ConvertHelper.h"
-#include "Curve.h"
+//#include "Curve.h"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>

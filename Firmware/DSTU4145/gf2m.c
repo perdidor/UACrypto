@@ -76,7 +76,7 @@ void g2fmshiftRight(uint32_t * bytes, size_t len, uint32_t right) {
 
 	if (right == 31) mask_f = 0xffffffff;
 
-	uint32_t *_rbytes = malloc(len * sizeof(uint32_t));
+	uint32_t _rbytes[128];
 
 	memcpy(_rbytes, bytes, len * sizeof(uint32_t));
 
@@ -90,7 +90,6 @@ void g2fmshiftRight(uint32_t * bytes, size_t len, uint32_t right) {
 
 	if (wright == 0) {
 		memcpy(bytes, _rbytes, len * sizeof(uint32_t));
-		free(_rbytes);
 		return;
 	}
 
@@ -99,7 +98,6 @@ void g2fmshiftRight(uint32_t * bytes, size_t len, uint32_t right) {
 	}
 
 	memcpy(bytes, _rbytes, len * sizeof(uint32_t));
-	free(_rbytes);
 	return;
 }
 

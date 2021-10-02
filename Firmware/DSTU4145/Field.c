@@ -4,7 +4,7 @@
  * Created: 04.09.2021 17:56:36
  *  Author: root
  */ 
-#include "Curve.h"
+//#include "Curve.h"
 #include "Point.h"
 #include "gf2m.h"
 #include "dstu_types.h"
