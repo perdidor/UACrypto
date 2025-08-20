@@ -1,8 +1,14 @@
 # Proof-of-Concept: Arduino can generate an electronic signature in accordance with the Ukrainian national crypto standard DSTU4145.
+
+<img src="kdpv.jpg">
+
 # Copyrights
+
 The code in this repository is written to order and belongs to the company Unisystem, UA.
+
 # Description
-It is a port from the repository https://github.com/dstucrypt/jkurwa (Lord is my witness, I am really tired of porting javascript to pure C). Respect to the author jkurwa, by the way.
+
+It is a port from the repository https://github.com/dstucrypt/jkurwa (Lord is my witness, I am really tired of porting javascript to pure C). Respect to the author jkurwa, by the way. Picture stolen from jkurwa too, sorry.
 
 Stable signature generation has been achieved on the same data set (see main.c ), with the selection of a random point on the elliptic curve and verification of the signature result on the public key.
 
