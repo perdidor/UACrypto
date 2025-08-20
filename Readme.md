@@ -10,6 +10,8 @@ The signature takes about 60 seconds, the signature verification takes 120 secon
 
 Requires at least 4K RAM. After optimization (if you do it yourself) it will probably be less (and, possibly, faster heh).
 
+The process of signature generation is accompanied by the output of debug information to the UART0 port with parameters 9600/8/N/1.
+
 The repository contains a desktop application for decrypting and calculating the parameters of the secret signature key from the key6.dat file.
 
 The parameters of the secret (PrivateKey.c) and public (PubKey.c) keys in the firmware code are test ones, taken from the test keys from the Ukrainian tax service website, available at the time of development (September 2021), then everything went to hell and the project was closed. This was supposed to be a new cash register - a hybrid type PRRO based on the T-400 Mini.
