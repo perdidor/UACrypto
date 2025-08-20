@@ -197,13 +197,10 @@ void FieldClearBit(field_t * field, uint32_t n) {
 	SIGN_ACT_TOGGLE();
 	int test_word = floor(n / 32);
 	int test_bit = n % 32;
-	//int mask = (1 << test_bit);
-	if (field->length < test_word - 1)
-	{
+	if (test_word < 0 || test_word > field->length) {
 		return;
 	}
 
-	//field->bytes[test_word] ^= (field->bytes[test_word] & mask);
 	field->bytes[test_word] &= ~(1UL << test_bit);
 }
 
@@ -211,12 +208,10 @@ void FieldSetBit(field_t * field, uint32_t n) {
 	SIGN_ACT_TOGGLE();
 	int test_word = floor(n / 32);
 	int test_bit = n % 32;
-	int mask = 1 << test_bit;
-	if (field->length < test_word - 1)
-	{
+	if (test_word < 0 || test_word > field->length) {
 		return;
 	}
-	field->bytes[test_word] = mask;
+	field->bytes[test_word] |= (1UL << test_bit);
 }
 
 void FieldShiftRight(field_t * field, uint32_t n, field_t * res) {
@@ -233,14 +228,10 @@ void FieldShiftRightM(field_t * field, uint32_t n) {
 }
 
 int FieldBuf8(field_t * field, uint8_t * buf) {
-	int fieldlen = (int)field->length;
-	//size_t len = field->length * sizeof(uint8_t);
-	//while (field->bytes[fieldlen - 1] == 0) {
-		//fieldlen--;
-	//}
-	int fieldbuflen = fieldlen * 4;
 
-	for (uint8_t idx = 0; idx < fieldlen; idx++) {
+	int fieldbuflen = field->length * 4;
+
+	for (uint8_t idx = 0; idx < field->length; idx++) {
 		buf[fieldbuflen - idx * 4 - 1] = field->bytes[idx] & 0xFF;
 		buf[fieldbuflen - idx * 4 - 2] = field->bytes[idx] >> 8 & 0xFF;
 		buf[fieldbuflen - idx * 4 - 3] = field->bytes[idx] >> 16 & 0xFF;

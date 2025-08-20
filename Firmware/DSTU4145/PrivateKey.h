@@ -36,21 +36,22 @@ uint32_t Curve_basepoint_field_x[18];
 uint32_t Curve_basepoint_field_y[9];
 uint32_t erand_bytes[9];
 
-precomp_set_t PreComputedPoints;
+precomp_set_t PrivKeyPreComputedPoints;
 
 uint8_t signatureOut[64];
 
-uint32_t erand_bytes[9];
-
-uint8_t uint8_buffer[128];
-
-uint8_t withzero[33];
-
-field_t curve_order;
-field_t rand_e;
+//uint32_t erand_bytes[9];
+//
+//uint8_t uint8_buffer[128];
+//
+//uint8_t withzero[33];
+//
+//field_t curve_order;
+//field_t rand_e;
 point_t basepoint;
 
 void SignHash(uint8_t * hashvalue);
-void Signer_Setup();
+
+void Signer_Setup(void);
 
 #endif /* PRIVATEKEY_H_ */

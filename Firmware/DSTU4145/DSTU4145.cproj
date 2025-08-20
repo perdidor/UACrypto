@@ -123,7 +123,7 @@
             <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
-        <avrgcc.compiler.optimization.level>Optimize debugging experience (-Og)</avrgcc.compiler.optimization.level>
+        <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
         <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
         <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
         <avrgcc.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcc.compiler.optimization.DebugLevel>
@@ -188,22 +188,10 @@
     <Compile Include="gf2m.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="gost89.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="gost89.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="LEDC.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="notaxTemplate.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="notaxTemplate.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Point.c">
@@ -222,6 +210,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="PRNG.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="PubKey.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="PubKey.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="USART.c">

@@ -174,7 +174,7 @@ void PointMulPos_Stage2_Loop(int32_t wi, point_t * res) {
 	int zeroes = wi & 0xFFFF;
 
 	int32_t n = abs(digit);
-	precomp_t * table = (digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos;
+	precomp_t * table = (digit < 0) ? PrivKeyPreComputedPoints.neg : PrivKeyPreComputedPoints.pos;
 
 	FieldFromUint32Buf(&table[n >> 1].x[0], 9, &r.x);
 	FieldFromUint32Buf(&table[n >> 1].y[0], 9, &r.y);
@@ -186,7 +186,7 @@ void PointMulPos_Stage2_Loop(int32_t wi, point_t * res) {
 	free(table);
 }
 
-void PointMulPos_Stage2(field_t * big_k, point_t * stage1res, point_t * res) {
+void PointMulPos_Stage2(field_t * big_k, point_t * stage1res, point_t * res, precomp_set_t PreComps) {
 	SIGN_ACT_TOGGLE();
 	point_t r;
 	point_t tmp;
@@ -209,8 +209,8 @@ void PointMulPos_Stage2(field_t * big_k, point_t * stage1res, point_t * res) {
 		digit = wi >> 16;
 		zeroes = wi & 0xFFFF;
 		n = abs(digit);
-		FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[n >> 1].x, 9, &r.x);
-		FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[n >> 1].y, 9, &r.y);
+		FieldFromUint32Buf(((digit < 0) ? PreComps.neg : PreComps.pos)[n >> 1].x, 9, &r.x);
+		FieldFromUint32Buf(((digit < 0) ? PreComps.neg : PreComps.pos)[n >> 1].y, 9, &r.y);
 		PointTwicePlus(stage1res, &r, &tmp);
 		PointTimesPow2(&tmp, zeroes, stage1res);
 		EXT_UART_Transmit("*");
@@ -219,7 +219,7 @@ void PointMulPos_Stage2(field_t * big_k, point_t * stage1res, point_t * res) {
 	PointCopy(stage1res, res);
 }
 
-void PointMulPos_Stage1(point_t * point, field_t * big_k, point_t * res) {
+void PointMulPos_Stage1(point_t * point, field_t * big_k, point_t * res, precomp_set_t PreComps) {
 	SIGN_ACT_TOGGLE();
 	uint32_t bigkbl = FieldBitLength(big_k);
 	uint32_t width = getWindowSize(bigkbl);
@@ -246,16 +246,16 @@ void PointMulPos_Stage1(point_t * point, field_t * big_k, point_t * res) {
 			size_t i2 = (lowBits << scale) + 1;
 			point_t tablei1;
 			point_t tablei2;
-			FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[i1 >> 1].x, 9, &tablei1.x);
-			FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[i1 >> 1].y, 9, &tablei1.y);
-			FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[i2 >> 1].x, 9, &tablei2.x);
-			FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[i2 >> 1].y, 9, &tablei2.y);
+			FieldFromUint32Buf(((digit < 0) ? PreComps.neg : PreComps.pos)[i1 >> 1].x, 9, &tablei1.x);
+			FieldFromUint32Buf(((digit < 0) ? PreComps.neg : PreComps.pos)[i1 >> 1].y, 9, &tablei1.y);
+			FieldFromUint32Buf(((digit < 0) ? PreComps.neg : PreComps.pos)[i2 >> 1].x, 9, &tablei2.x);
+			FieldFromUint32Buf(((digit < 0) ? PreComps.neg : PreComps.pos)[i2 >> 1].y, 9, &tablei2.y);
 			PointAdd(&tablei1, &tablei2, &R);
 			zeroes -= scale;
 		} else
         {
-			FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[n >> 1].x, 9, &R.x);
-			FieldFromUint32Buf(((digit < 0) ? PreComputedPoints.neg : PreComputedPoints.pos)[n >> 1].y, 9, &R.y);
+			FieldFromUint32Buf(((digit < 0) ? PreComps.neg : PreComps.pos)[n >> 1].x, 9, &R.x);
+			FieldFromUint32Buf(((digit < 0) ? PreComps.neg : PreComps.pos)[n >> 1].y, 9, &R.y);
         }
 
 		PointTimesPow2(&R, zeroes, res);
